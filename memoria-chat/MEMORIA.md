@@ -598,6 +598,17 @@ Corrigido com `_huntEntering`: `huntPlay()` virou uma casca que tranca, chama
 `huntPlayInterno()` e destranca no `finally`; o botão também é desabilitado na hora.
 Testado: 3 cliques seguidos = **1 entrada só**.
 
+### 🔴 A recarga produz 25 CRAVADOS — coletar sem espaço dá erro (08/09/2026)
+Corrige o que este arquivo dizia antes. O Michel testou: **o gerador sempre produz 25**, e a
+coleta é **recusada** quando não cabe. O mínimo 0 no painel **não faz preenchimento parcial** —
+a suposição anterior estava errada.
+
+Consequência: entre **76 e 99** de energia o botão ficava ativo e só dava erro. Agora existe
+`energyCabeRecarga()` (`ENERGY_MAX - energia >= ENERGY_PER_TICK`), usada **pelo botão e pela
+coleta**, manual e automática — uma função só, pra a regra não divergir em dois lugares.
+Com menos de 25 de espaço o botão trava mostrando `⚡25 🔒` e explica que a energia está
+guardada. Conferido: cabe até 75, trava a partir de 76.
+
 ### ⚡ Energia: como funciona hoje (06/09/2026)
 **Por que o painel está em mín. 0 / máx. 25** (decisão do Michel): com 25 fixo, a coleta era
 **recusada** quando faltava menos de 25 pro topo. O mínimo 0 deixa o servidor creditar só o que

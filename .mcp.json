@@ -5,8 +5,9 @@
       "args": ["-y", "@playwright/mcp@latest", "--browser", "msedge"]
     },
     "firebase": {
-      "command": "firebase",
-      "args": ["experimental:mcp"]
+      "command": "cmd",
+      "args": ["/c", "firebase", "experimental:mcp"],
+      "_nota": "O 'cmd /c' NAO e enfeite: no Windows o Node recusa executar .cmd direto (spawn EINVAL), e o firebase global e um .cmd. Sem isso o servidor nem sobe e o Claude Code reporta CONNECT_TIMEOUT, o que faz parecer lentidao. Medido: com cmd /c responde em 1,8s."
     },
     "github": {
       "command": "npx",

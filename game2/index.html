@@ -2269,6 +2269,7 @@ var I18N = {
   'energy.upto': 'até',
   'energy.auto_in': 'Toque pra coletar — ou o jogo coleta em {t}',
   'energy.collecting': 'Coletando...',
+  'energy.no_room': '⚡ Os {n} de energia estão guardados — gaste um pouco pra caber',
   'source.wood': 'Derrubando árvores. Gasta machado.',
   'source.stone': 'Quebrando pedras. Gasta picareta.',
   'source.iron': 'Quebrando as pedras de ferro, as escuras. Gasta picareta.',
@@ -2890,6 +2891,7 @@ var I18N = {
   'energy.upto': 'up to',
   'energy.auto_in': 'Tap to collect — or the game collects in {t}',
   'energy.collecting': 'Collecting...',
+  'energy.no_room': '⚡ The {n} energy is being held — spend some to make room',
   'source.wood': 'Chopping trees. Uses up axes.',
   'source.stone': 'Breaking rocks. Uses up pickaxes.',
   'source.iron': 'Breaking the iron rocks, the dark ones. Uses up pickaxes.',
@@ -4514,6 +4516,15 @@ function showProfileMenu() {
 // não existe mais número de versão solto pra esquecer de atualizar.
 // Escreva só o que o JOGADOR percebe, de forma impessoal. Detalhe técnico não entra.
 const CHANGELOG = [
+  {
+    v: 'v2.0.5', date: '2026-09-08',
+    pt: [
+      'Corrigido: com a barra quase cheia, coletar a energia dava erro. Agora o botão avisa que os 25⚡ estão guardados e espera abrir espaço.',
+    ],
+    en: [
+      'Fixed: collecting energy with an almost-full bar threw an error. The button now says the 25⚡ are being held and waits for room.',
+    ],
+  },
   {
     v: 'v2.0.4', date: '2026-09-06',
     pt: [
@@ -9035,6 +9046,10 @@ const ENERGY_TICK_MIN = 25;
 // Quanto tempo o botão fica esperando o jogador antes de o jogo coletar sozinho.
 // Barra cheia não coleta: os 25 ficam guardados no gerador até abrir espaço.
 const ENERGY_AUTOCOLLECT_MS = 60 * 1000;
+// ⚠️ O gerador produz ENERGY_PER_TICK INTEIRO — não existe meia recarga. Com menos que
+// isso de espaço o servidor RECUSA a coleta. Uma função só, usada pelo botão e pela
+// coleta (manual e automática), pra a regra não viver em dois lugares e divergir.
+function energyCabeRecarga() { return (ENERGY_MAX - gameState.energy) >= ENERGY_PER_TICK; }
 function energyTickLabel() {
   return (ENERGY_TICK_MIN < ENERGY_PER_TICK)
     ? `+${t('energy.upto')} ${ENERGY_PER_TICK}⚡`
@@ -9748,6 +9763,12 @@ async function collectEnergy() {
   if (_collectInProgress) {
   return;
   }
+  // Trava a coleta quando não cabe um ciclo inteiro: o gerador produz 25 cravados e o
+  // servidor recusa o que não couber. Vale pro clique E pra coleta automática.
+  if (!energyCabeRecarga()) {
+    showToast(t('energy.no_room', { n: ENERGY_PER_TICK }), 'info');
+    return;
+  }
   _collectInProgress = true;
   const btn = document.getElementById('collect-energy-btn');
   if (btn) {
@@ -9838,6 +9859,22 @@ function updateCollectEnergyButton() {
   const session = window._sflLastSession;
   const readyJobID = findReadyGenerator(session);
   if (readyJobID) {
+  // ⚠️ O gerador SEMPRE produz ENERGY_PER_TICK inteiro — não existe meia recarga.
+  // Com menos de 25 de espaço a coleta é RECUSADA pelo servidor. Então nem tenta:
+  // o botão fica travado explicando, e os 25 seguem guardados no gerador até o
+  // jogador gastar energia. (Antes o botão ficava ativo até 99/100 e só dava erro.)
+  if (!energyCabeRecarga()) {
+    btn.disabled = true;
+    btn.title = t('energy.no_room', { n: ENERGY_PER_TICK });
+    btn.innerHTML = '⚡' + ENERGY_PER_TICK + ' 🔒';
+    btn.style.opacity = '0.6';
+    btn.style.animation = 'none';
+    btn.style.cursor = 'not-allowed';
+    btn.style.background = '#3a2a1a';
+    btn.style.color = '#a89070';
+    btn.style.borderColor = '#806020';
+    return;
+  }
   // ── COLETA SOZINHA depois de ENERGY_AUTOCOLLECT_MS ────────────────────────────
   // O botão aparece pro jogador coletar; se ele não coletar em 1 minuto, o jogo coleta.
   // Só chega aqui quando há ESPAÇO na barra (mais acima a função sai quando está cheia),
