@@ -598,6 +598,24 @@ Corrigido com `_huntEntering`: `huntPlay()` virou uma casca que tranca, chama
 `huntPlayInterno()` e destranca no `finally`; o botão também é desabilitado na hora.
 Testado: 3 cliques seguidos = **1 entrada só**.
 
+### ⛵ Barco ao lado da ponte (09/09/2026) — e como posicionar coisa na ilha
+**A ilha é um PNG em base64 dentro do CSS** (`#base-island`, linha ~57), de **540×378**
+desenhado em **2×** (elemento de 1080×756). A ponte, as pedras e as ilhotas são parte da
+imagem — não existem no DOM, então **não dá pra achar por busca no código**.
+
+Como acertei a posição (vale pra qualquer enfeite novo):
+1. Extrair o base64 pra um `.png` e **olhar a imagem**.
+2. Recortar e ampliar a região com `System.Drawing` pra medir em pixel.
+3. Converter pra `%`: `x/540` e `y/378`.
+4. Conferir na página medindo o `getBoundingClientRect()` do enfeite **relativo ao
+   `#base-island`**, dividido pela escala — tem que cair onde você mediu.
+
+Medidas úteis desta região: **ponte x≈196–223, y≈290–340**; a **ilhota da esquerda termina em
+x≈135**. O barco ficou no vão entre as duas: `left:30.2%; top:84.1%`, 102×66 px.
+Sprite: `restock_boat.png` do SFL (68×44), achado pelo `RestockBoat.tsx` no repositório deles —
+os palpites de URL (`decorations/boat.png` etc.) deram **404**.
+É só enfeite: `pointer-events:none`, com uma balançadinha em `hb-boat-bob`.
+
 ### 🆕 Bancada: botão de Receitas e "coletar antes de fabricar" (08/09/2026)
 **📜 Receitas = UM BOTÃO que abre o `openRecipePicker`**, o mesmo seletor que já aparece ao
 clicar num slot pra escolher o que produzir. Fica no cabeçalho da coluna de Produção, à
