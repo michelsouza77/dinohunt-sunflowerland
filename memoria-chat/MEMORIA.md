@@ -599,14 +599,19 @@ Corrigido com `_huntEntering`: `huntPlay()` virou uma casca que tranca, chama
 Testado: 3 cliques seguidos = **1 entrada só**.
 
 ### 🆕 Bancada: botão de Receitas e "coletar antes de fabricar" (08/09/2026)
-**📜 Receitas ficam DENTRO da bancada**, na coluna da esquerda, alternando com o inventário
-por duas abas — **não é popup**. Tentei popup primeiro e o Michel corrigiu: ele precisa ver o
-que dá pra fabricar **e os slots ao mesmo tempo**. `stationRecipeList(cfg, saldos)` devolve só
-o HTML; `wbAlternarReceitas(chave, ver)` guarda a escolha em `_wbVerReceitas` e re-renderiza.
-O botão do cabeçalho virou atalho pra essa mesma aba.
+**📜 Receitas = TERCEIRA COLUNA, fixa no canto direito**, depois da fabricação
+(`.ldoe-recipes`, `flex:0 0 178px`; 132px no celular). Sempre visível — é consulta, o jogador
+olha enquanto monta a produção.
 
-Lista entradas → saída → tempo, pintando em **verde o que o jogador já tem** e vermelho o que
-falta. ⚠️ A chave de tradução **já existia** e chama `craft.recipes_title` — quase criei uma
+⚠️ **Errei duas vezes antes de acertar:** primeiro fiz popup (cobre tudo), depois pus na
+coluna da ESQUERDA alternando com o inventário (escondia o inventário). O Michel foi claro:
+*"do lado de fabricação, lá no canto direito"*. **Não inventar layout: é coluna à direita.**
+
+Como a coluna é estreita, o cartão é compacto — resultado + tempo em cima, materiais embaixo.
+Verde = tem; vermelho = falta; a moldura fica verde quando dá pra fabricar agora.
+`stationRecipeList(cfg, saldos)` devolve só o HTML. Diferente do `openRecipePicker`, que exige
+um slot e serve pra ESCOLHER; esta só mostra.
+⚠️ A chave de tradução **já existia** e chama `craft.recipes_title` — quase criei uma
 duplicada `craft.recipes`.
 
 **Coletar vem antes de fabricar.** Enquanto houver slot pronto, o botão grande de baixo é
