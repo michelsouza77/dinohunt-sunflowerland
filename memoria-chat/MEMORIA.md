@@ -598,6 +598,18 @@ Corrigido com `_huntEntering`: `huntPlay()` virou uma casca que tranca, chama
 `huntPlayInterno()` e destranca no `finally`; o botão também é desabilitado na hora.
 Testado: 3 cliques seguidos = **1 entrada só**.
 
+### 🆕 Bancada: botão de Receitas e "coletar antes de fabricar" (08/09/2026)
+**📜 Receitas** ao lado do nome da bancada, no cabeçalho. `showStationRecipes(chave)` — só
+consulta, diferente do `openRecipePicker`, que exige um slot e serve pra escolher. Lista
+entradas → saída → tempo, e pinta em **verde o que o jogador já tem** e vermelho o que falta.
+⚠️ A chave de tradução **já existia** e chama `craft.recipes_title` — quase criei uma
+duplicada `craft.recipes`.
+
+**Coletar vem antes de fabricar.** Enquanto houver slot pronto, o botão grande de baixo é
+**COLETAR** (com contador, se houver mais de um), não FABRICAR. O botão de coletar de dentro do
+slot é pequeno e passava batido, então o jogador seguia mandando fabricar sem ver o que já
+estava pronto. Implementado com `slotsProntos`, preenchido no mesmo laço que desenha os slots.
+
 ### 🔴 A recarga produz 25 CRAVADOS — coletar sem espaço dá erro (08/09/2026)
 Corrige o que este arquivo dizia antes. O Michel testou: **o gerador sempre produz 25**, e a
 coleta é **recusada** quando não cabe. O mínimo 0 no painel **não faz preenchimento parcial** —

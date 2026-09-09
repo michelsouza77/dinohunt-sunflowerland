@@ -4517,6 +4517,17 @@ function showProfileMenu() {
 // Escreva só o que o JOGADOR percebe, de forma impessoal. Detalhe técnico não entra.
 const CHANGELOG = [
   {
+    v: 'v2.0.6', date: '2026-09-08',
+    pt: [
+      'Botão "Receitas" ao lado do nome da bancada: mostra tudo que ela fabrica e o que falta pra cada coisa.',
+      'Com item pronto, o botão grande da bancada vira COLETAR — antes continuava oferecendo fabricar.',
+    ],
+    en: [
+      '"Recipes" button next to the workbench name: shows everything it makes and what you still need.',
+      'With an item ready, the big workbench button becomes COLLECT — it used to keep offering to craft.',
+    ],
+  },
+  {
     v: 'v2.0.5', date: '2026-09-08',
     pt: [
       'Corrigido: com a barra quase cheia, coletar a energia dava erro. Agora o botão avisa que os 25⚡ estão guardados e espera abrir espaço.',
@@ -5808,7 +5819,10 @@ function openWorkbench(stationKey) {
        style="width:36px;height:36px;object-fit:contain;image-rendering:pixelated;"
        onerror="this.outerHTML='<span style=&quot;font-size:24px;&quot;>${cfg.emoji}</span>';" />
     <div>
-      <h2 style="font-family:'Pixelify Sans',monospace;color:var(--gold-light);font-size:15px;letter-spacing:1.5px;margin:0;">${(cfg.nameKey ? t(cfg.nameKey) : cfg.name).toUpperCase()}</h2>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <h2 style="font-family:'Pixelify Sans',monospace;color:var(--gold-light);font-size:15px;letter-spacing:1.5px;margin:0;">${(cfg.nameKey ? t(cfg.nameKey) : cfg.name).toUpperCase()}</h2>
+        <button onclick="showStationRecipes('${cfg.id}')" title="${t('craft.recipes_title')}" style="background:rgba(0,0,0,.18);border:2px solid #b3824f;color:var(--gold-light);padding:2px 8px;border-radius:6px;font-family:'Pixelify Sans',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;white-space:nowrap;">📜 ${t('craft.recipes_title')}</button>
+      </div>
       ${isBuilt ? `<div style="font-size:10px;color:var(--gold-dim);font-family:system-ui,sans-serif;letter-spacing:0.5px;">${t('craft.level')} ${state.level}/5 · ${state.level} ${t('craft.slots')}</div>` : ''}
     </div>
     </div>
@@ -5833,6 +5847,55 @@ function closeWorkbench() {
   if (modal) modal.remove();
   updateCraftMapStatus();
 }
+// 📜 Lista de RECEITAS da bancada — só consulta, não escolhe nada.
+// Diferente do openRecipePicker, que precisa de um slot e serve pra escolher: aqui o
+// jogador só quer ver o que a bancada faz e de quanto precisa. Mostra o que ele já tem
+// em verde, pra dar pra bater o olho e saber o que dá pra fazer agora.
+function showStationRecipes(stationKey) {
+  const cfg = CRAFT_STATIONS[stationKey];
+  if (!cfg) return;
+  const bal = (typeof SFL_CONNECTED !== 'undefined' && SFL_CONNECTED)
+    ? (window._sflLastSession?.data?.playerEconomy?.balances || {}) : {};
+  const nomeItem = (id) => {
+    const k = 'item.name.' + id;
+    return (t(k, {}) !== k) ? t(k) : ((SFL_ITEMS_INFO[id] && SFL_ITEMS_INFO[id].name) || ('Item ' + id));
+  };
+  const linhas = (cfg.recipes || []).map(r => {
+    const entradas = Object.entries(r.burn).map(([matId, qty]) => {
+      const tem = Number(bal[matId]) || 0;
+      const ok = tem >= qty;
+      const info = SFL_ITEMS_INFO[matId] || { emoji: '📦' };
+      return `<div style="display:flex;align-items:center;gap:4px;" title="${nomeItem(matId)}: você tem ${tem}">
+        <img src="${sflItemImageUrl(parseInt(matId))}" style="width:26px;height:26px;object-fit:contain;image-rendering:pixelated;opacity:${ok ? 1 : .4};" onerror="this.outerHTML='${info.emoji}'">
+        <span style="font-family:'SFLSecondary','Pixelify Sans',monospace;font-size:15px;color:${ok ? '#7eff7e' : '#e08a7a'};">${qty}</span>
+      </div>`;
+    }).join('<span style="color:var(--gold-dim);">+</span>');
+    const oi = SFL_ITEMS_INFO[r.produces] || { emoji: '📦' };
+    const dur = r.seconds >= 60 ? Math.floor(r.seconds / 60) + 'min' : r.seconds + 's';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(0,0,0,.10);border:2px solid #b3824f;border-radius:10px;margin-bottom:8px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">${entradas}</div>
+      <span style="color:var(--gold-dim);font-size:16px;">▶</span>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <img src="${sflItemImageUrl(r.produces)}" style="width:30px;height:30px;object-fit:contain;image-rendering:pixelated;" onerror="this.outerHTML='${oi.emoji}'">
+        <span style="font-family:'SFLSecondary','Pixelify Sans',monospace;font-size:16px;color:#7eff7e;">+${r.amount}</span>
+      </div>
+      <span style="font-family:system-ui,sans-serif;font-size:11px;color:var(--gold-dim);white-space:nowrap;">⏱ ${dur}</span>
+    </div>`;
+  }).join('') || `<div style="text-align:center;color:var(--parch-dark);font-size:12px;padding:20px;">—</div>`;
+  const old = document.getElementById('station-recipes'); if (old) old.remove();
+  const m = document.createElement('div');
+  m.id = 'station-recipes';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:3800;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px);';
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+  m.innerHTML = `
+    <div class="lvprev-box" style="max-width:480px;width:100%;padding:18px;gap:10px;max-height:calc(var(--apph) * 0.85);overflow-y:auto;">
+      <div class="lvprev-num" style="font-size:17px;">📜 ${t('craft.recipes_title')} · ${(cfg.nameKey ? t(cfg.nameKey) : cfg.name).toUpperCase()}</div>
+      <div style="width:100%;">${linhas}</div>
+      <button class="lvprev-play" style="width:100%;" onclick="document.getElementById('station-recipes').remove()">${t('btn.close')}</button>
+    </div>`;
+  document.body.appendChild(m);
+}
+window.showStationRecipes = showStationRecipes;
 function refreshWorkbench(stationKey) {
   const body = document.getElementById('workbench-body');
   if (!body) return;
@@ -5965,6 +6028,9 @@ function renderWorkbenchSplit(cfg) {
   emptySlotsHtml += '<div class="ldoe-slot ldoe-slot-empty"></div>';
   }
   const slotCount = state.level;  // unlocked slots = level
+  // Slots com item PRONTO. O botão grande de baixo vira COLETAR enquanto houver algum:
+  // o jogador precisa tirar o que ficou pronto antes de mandar fabricar outro.
+  const slotsProntos = [];
   let craftingSlotsHtml = '';
   for (let i = 0; i < 5; i++) {
   const isUnlocked = i < slotCount;
@@ -6106,6 +6172,7 @@ function renderWorkbenchSplit(cfg) {
     </div>
     <button class="ldoe-craft-collect" onclick="event.stopPropagation();collectRecipeSlot('${cfg.id}',${i},'${activeJob.uuid}')">${t('btn.collect')}</button>
     `;
+    slotsProntos.push({ i, uuid: activeJob.uuid });
   } else if (activeJob) {
     slotInner = `
     <div class="ldoe-craft-time" style="color:#ffd060;">⏱ ${formatTime(remainingSec)}</div>
@@ -6171,7 +6238,21 @@ function renderWorkbenchSplit(cfg) {
   }
   }
   let inputQueueHtml = '';
-  if (firstIdleRecipe) {
+  // ── PRONTO VEM ANTES DE FABRICAR ──────────────────────────────────────────────
+  // Enquanto houver item pronto na bancada, o botão grande é COLETAR, não FABRICAR.
+  // Antes ele continuava oferecendo fabricar e o jogador não via que tinha algo pronto
+  // esperando (o botão de coletar do slot é pequeno e passa batido).
+  if (slotsProntos.length) {
+    const p = slotsProntos[0];
+    const quantos = slotsProntos.length > 1 ? ` (${slotsProntos.length})` : '';
+    inputQueueHtml = `
+    <div style="display:flex;gap:8px;padding:10px 12px;border-top:2px solid #b3824f;background:rgba(0,0,0,.06);">
+      <button onclick="collectRecipeSlot('${cfg.id}',${p.i},'${p.uuid}')"
+        style="flex:1;padding:15px;font-family:'Pixelify Sans',monospace;font-size:18px;font-weight:700;letter-spacing:1.5px;border:2px solid #4a7c3a;border-radius:9px;background:#63c74d;color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.35);cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.22);animation:ldoe-pulse 1.5s ease-in-out infinite;">
+        ✨ ${t('btn.collect')}${quantos}
+      </button>
+    </div>`;
+  } else if (firstIdleRecipe) {
   const burns = Object.entries(firstIdleRecipe.burn);
   const inputBoxes = burns.map(([matId, qty]) => {
     const have = Number(balances[matId]) || 0;
