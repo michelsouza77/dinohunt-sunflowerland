@@ -5821,7 +5821,7 @@ function openWorkbench(stationKey) {
     <div>
       <div style="display:flex;align-items:center;gap:8px;">
         <h2 style="font-family:'Pixelify Sans',monospace;color:var(--gold-light);font-size:15px;letter-spacing:1.5px;margin:0;">${(cfg.nameKey ? t(cfg.nameKey) : cfg.name).toUpperCase()}</h2>
-        <button onclick="showStationRecipes('${cfg.id}')" title="${t('craft.recipes_title')}" style="background:rgba(0,0,0,.18);border:2px solid #b3824f;color:var(--gold-light);padding:2px 8px;border-radius:6px;font-family:'Pixelify Sans',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;white-space:nowrap;">📜 ${t('craft.recipes_title')}</button>
+        ${isBuilt ? `<button onclick="wbAlternarReceitas('${cfg.id}', true)" title="${t('craft.recipes_title')}" style="background:rgba(0,0,0,.18);border:2px solid #b3824f;color:var(--gold-light);padding:2px 8px;border-radius:6px;font-family:'Pixelify Sans',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;white-space:nowrap;">📜 ${t('craft.recipes_title')}</button>` : ''}
       </div>
       ${isBuilt ? `<div style="font-size:10px;color:var(--gold-dim);font-family:system-ui,sans-serif;letter-spacing:0.5px;">${t('craft.level')} ${state.level}/5 · ${state.level} ${t('craft.slots')}</div>` : ''}
     </div>
@@ -5847,15 +5847,19 @@ function closeWorkbench() {
   if (modal) modal.remove();
   updateCraftMapStatus();
 }
-// 📜 Lista de RECEITAS da bancada — só consulta, não escolhe nada.
-// Diferente do openRecipePicker, que precisa de um slot e serve pra escolher: aqui o
-// jogador só quer ver o que a bancada faz e de quanto precisa. Mostra o que ele já tem
-// em verde, pra dar pra bater o olho e saber o que dá pra fazer agora.
-function showStationRecipes(stationKey) {
-  const cfg = CRAFT_STATIONS[stationKey];
-  if (!cfg) return;
-  const bal = (typeof SFL_CONNECTED !== 'undefined' && SFL_CONNECTED)
-    ? (window._sflLastSession?.data?.playerEconomy?.balances || {}) : {};
+// 📜 RECEITAS da bancada — vivem DENTRO dela, na coluna da esquerda, alternando com o
+// inventário. Não é popup: o jogador precisa ver o que dá pra fazer e os slots ao mesmo
+// tempo. Diferente do openRecipePicker, que exige um slot e serve pra ESCOLHER; aqui é
+// só consulta, com o que ele já tem em verde e o que falta em vermelho.
+var _wbVerReceitas = {};
+function wbAlternarReceitas(stationKey, ver) {
+  _wbVerReceitas[stationKey] = !!ver;
+  refreshWorkbench(stationKey);
+}
+window.wbAlternarReceitas = wbAlternarReceitas;
+function stationRecipeList(cfg, bal) {
+  if (!cfg) return '';
+  bal = bal || {};
   const nomeItem = (id) => {
     const k = 'item.name.' + id;
     return (t(k, {}) !== k) ? t(k) : ((SFL_ITEMS_INFO[id] && SFL_ITEMS_INFO[id].name) || ('Item ' + id));
@@ -5882,20 +5886,8 @@ function showStationRecipes(stationKey) {
       <span style="font-family:system-ui,sans-serif;font-size:11px;color:var(--gold-dim);white-space:nowrap;">⏱ ${dur}</span>
     </div>`;
   }).join('') || `<div style="text-align:center;color:var(--parch-dark);font-size:12px;padding:20px;">—</div>`;
-  const old = document.getElementById('station-recipes'); if (old) old.remove();
-  const m = document.createElement('div');
-  m.id = 'station-recipes';
-  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:3800;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px);';
-  m.onclick = (e) => { if (e.target === m) m.remove(); };
-  m.innerHTML = `
-    <div class="lvprev-box" style="max-width:480px;width:100%;padding:18px;gap:10px;max-height:calc(var(--apph) * 0.85);overflow-y:auto;">
-      <div class="lvprev-num" style="font-size:17px;">📜 ${t('craft.recipes_title')} · ${(cfg.nameKey ? t(cfg.nameKey) : cfg.name).toUpperCase()}</div>
-      <div style="width:100%;">${linhas}</div>
-      <button class="lvprev-play" style="width:100%;" onclick="document.getElementById('station-recipes').remove()">${t('btn.close')}</button>
-    </div>`;
-  document.body.appendChild(m);
+  return linhas;
 }
-window.showStationRecipes = showStationRecipes;
 function refreshWorkbench(stationKey) {
   const body = document.getElementById('workbench-body');
   if (!body) return;
@@ -6300,16 +6292,24 @@ function renderWorkbenchSplit(cfg) {
     </div>
   `;
   }
+  // ── COLUNA DA ESQUERDA: alterna INVENTÁRIO ↔ RECEITAS ────────────────────────
+  // As receitas ficam DENTRO da bancada, do lado da produção — não num popup por cima.
+  // Assim o jogador vê o que dá pra fabricar e os slots ao mesmo tempo.
+  const verReceitas = !!_wbVerReceitas[cfg.id];
+  const abaEsq = (ativa, alvo, emoji, rotulo) => `
+    <button onclick="wbAlternarReceitas('${cfg.id}',${alvo})" style="flex:1;padding:6px 4px;font-family:'Pixelify Sans',monospace;font-size:11px;font-weight:700;letter-spacing:.5px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;background:${ativa ? 'rgba(0,0,0,.18)' : 'transparent'};color:${ativa ? 'var(--gold-light)' : 'var(--gold-dim)'};">${emoji} ${rotulo}</button>`;
+  const colunaEsq = verReceitas
+    ? `<div style="flex:1;min-height:0;overflow-y:auto;padding:0 6px 6px;">${stationRecipeList(cfg, balances)}</div>`
+    : `<div class="ldoe-inv-grid">${inventorySlots}${emptySlotsHtml}</div>`;
   return `
   <div class="ldoe-split">
-    <!-- LEFT: Inventory -->
+    <!-- LEFT: Inventário OU Receitas -->
     <div class="ldoe-left">
-    <div class="ldoe-section-title">
-      🎒 <span>${t('craft.inventory')}</span>
+    <div style="display:flex;gap:4px;padding:6px 6px 4px;">
+      ${abaEsq(!verReceitas, false, '🎒', t('craft.inventory'))}
+      ${abaEsq(verReceitas, true, '📜', t('craft.recipes_title'))}
     </div>
-    <div class="ldoe-inv-grid">
-      ${inventorySlots}${emptySlotsHtml}
-    </div>
+    ${colunaEsq}
     </div>
     <!-- RIGHT: Crafting slots + recipe preview + FABRICAR button -->
     <div class="ldoe-right">

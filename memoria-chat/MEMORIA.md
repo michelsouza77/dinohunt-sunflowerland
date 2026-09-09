@@ -599,10 +599,14 @@ Corrigido com `_huntEntering`: `huntPlay()` virou uma casca que tranca, chama
 Testado: 3 cliques seguidos = **1 entrada só**.
 
 ### 🆕 Bancada: botão de Receitas e "coletar antes de fabricar" (08/09/2026)
-**📜 Receitas** ao lado do nome da bancada, no cabeçalho. `showStationRecipes(chave)` — só
-consulta, diferente do `openRecipePicker`, que exige um slot e serve pra escolher. Lista
-entradas → saída → tempo, e pinta em **verde o que o jogador já tem** e vermelho o que falta.
-⚠️ A chave de tradução **já existia** e chama `craft.recipes_title` — quase criei uma
+**📜 Receitas ficam DENTRO da bancada**, na coluna da esquerda, alternando com o inventário
+por duas abas — **não é popup**. Tentei popup primeiro e o Michel corrigiu: ele precisa ver o
+que dá pra fabricar **e os slots ao mesmo tempo**. `stationRecipeList(cfg, saldos)` devolve só
+o HTML; `wbAlternarReceitas(chave, ver)` guarda a escolha em `_wbVerReceitas` e re-renderiza.
+O botão do cabeçalho virou atalho pra essa mesma aba.
+
+Lista entradas → saída → tempo, pintando em **verde o que o jogador já tem** e vermelho o que
+falta. ⚠️ A chave de tradução **já existia** e chama `craft.recipes_title` — quase criei uma
 duplicada `craft.recipes`.
 
 **Coletar vem antes de fabricar.** Enquanto houver slot pronto, o botão grande de baixo é
