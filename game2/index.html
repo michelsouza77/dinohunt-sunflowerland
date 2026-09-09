@@ -554,19 +554,6 @@ button[onclick*="remove()"][style*="font-size:20px"]:active{
 @media (pointer:coarse) and (max-width:600px){.anciao-inv{width:34%;min-width:120px;}.anciao-inv-grid{grid-template-columns:repeat(2,1fr);}}
 .ldoe-left,.ldoe-right{display:flex;flex-direction:column;flex:1;background:rgba(0,0,0,.2);}
 .ldoe-left{border-right:2px solid var(--gold-dim);}
-/* 📜 Coluna das RECEITAS: canto DIREITO, ao lado da fabricação. Largura fixa — ela é
-   consulta, então não pode roubar espaço dos slots nem do inventário. */
-.ldoe-recipes{display:flex;flex-direction:column;flex:0 0 178px;min-width:0;background:rgba(0,0,0,.2);border-left:2px solid var(--gold-dim);}
-.ldoe-rec{background:rgba(0,0,0,.12);border:2px solid #b3824f;border-radius:8px;padding:6px;margin-bottom:6px;}
-.ldoe-rec-out{display:flex;align-items:center;gap:5px;margin-bottom:4px;}
-.ldoe-rec-out img{width:26px;height:26px;object-fit:contain;image-rendering:pixelated;flex:none;}
-.ldoe-rec-qty{font-family:'SFLSecondary','Pixelify Sans',monospace;font-size:15px;color:#7eff7e;}
-.ldoe-rec-time{margin-left:auto;font-family:system-ui,sans-serif;font-size:9px;color:var(--gold-dim);white-space:nowrap;}
-.ldoe-rec-in{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
-.ldoe-rec-in img{width:19px;height:19px;object-fit:contain;image-rendering:pixelated;}
-.ldoe-rec-n{font-family:'SFLSecondary','Pixelify Sans',monospace;font-size:13px;}
-@media (pointer:coarse) and (max-width:768px){.ldoe-recipes{flex:0 0 132px;}
-.ldoe-rec-out img{width:22px;height:22px;}.ldoe-rec-in img{width:16px;height:16px;}}
 .ldoe-section-title{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(0,0,0,.5);border-bottom:1px solid var(--gold-dim);font-family:'Pixelify Sans',monospace;font-size:12px;letter-spacing:1.5px;color:var(--gold-light);}
 .ldoe-inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:10px;flex:1;align-content:start;overflow-y:auto;}
 /* ONE slot style everywhere (bancadas, baús, mochila) — the SFL brown square used in explore */
@@ -5857,43 +5844,6 @@ function closeWorkbench() {
   if (modal) modal.remove();
   updateCraftMapStatus();
 }
-// 📜 RECEITAS da bancada — coluna FIXA no canto direito, ao lado da fabricação.
-// Sempre visível: é consulta, o jogador olha enquanto monta a produção. Não é popup e
-// não esconde o inventário — as duas tentativas anteriores erraram nisso.
-// Diferente do openRecipePicker, que exige um slot e serve pra ESCOLHER; aqui só mostra,
-// com o que o jogador já tem em verde e o que falta em vermelho.
-function stationRecipeList(cfg, bal) {
-  if (!cfg) return '';
-  bal = bal || {};
-  const nomeItem = (id) => {
-    const k = 'item.name.' + id;
-    return (t(k, {}) !== k) ? t(k) : ((SFL_ITEMS_INFO[id] && SFL_ITEMS_INFO[id].name) || ('Item ' + id));
-  };
-  // Formato COMPACTO: a coluna é estreita, então o resultado vai em cima e os materiais
-  // embaixo, em vez de tudo numa linha só. Verde = o jogador tem; vermelho = falta.
-  const linhas = (cfg.recipes || []).map(r => {
-    const entradas = Object.entries(r.burn).map(([matId, qty]) => {
-      const tem = Number(bal[matId]) || 0;
-      const ok = tem >= qty;
-      const info = SFL_ITEMS_INFO[matId] || { emoji: '📦' };
-      return `<span class="ldoe-rec-in" title="${nomeItem(matId)}: ${tem}/${qty}">
-        <img src="${sflItemImageUrl(parseInt(matId))}" style="opacity:${ok ? 1 : .4};" onerror="this.outerHTML='${info.emoji}'"><span class="ldoe-rec-n" style="color:${ok ? '#7eff7e' : '#e08a7a'};">${qty}</span>
-      </span>`;
-    }).join('');
-    const oi = SFL_ITEMS_INFO[r.produces] || { emoji: '📦' };
-    const dur = r.seconds >= 60 ? Math.floor(r.seconds / 60) + 'min' : r.seconds + 's';
-    const daPraFazer = Object.entries(r.burn).every(([m, q]) => (Number(bal[m]) || 0) >= q);
-    return `<div class="ldoe-rec" style="${daPraFazer ? 'border-color:#7eff7e;' : ''}" title="${nomeItem(r.produces)}">
-      <div class="ldoe-rec-out">
-        <img src="${sflItemImageUrl(r.produces)}" onerror="this.outerHTML='${oi.emoji}'">
-        <span class="ldoe-rec-qty">+${r.amount}</span>
-        <span class="ldoe-rec-time">⏱ ${dur}</span>
-      </div>
-      <div class="ldoe-rec-in">${entradas}</div>
-    </div>`;
-  }).join('') || `<div style="text-align:center;color:var(--parch-dark);font-size:11px;padding:14px;">—</div>`;
-  return linhas;
-}
 function refreshWorkbench(stationKey) {
   const body = document.getElementById('workbench-body');
   if (!body) return;
@@ -6314,20 +6264,12 @@ function renderWorkbenchSplit(cfg) {
     <div class="ldoe-section-title">
       ⚙️ <span>${t('craft.production')}</span>
       <span style="margin-left:auto;font-size:10px;color:var(--gold-dim);font-family:system-ui;">${slotCount}/5 slots</span>
+      <button onclick="openRecipePicker('${cfg.id}',${firstIdleSlot >= 0 ? firstIdleSlot : 0})" title="${t('craft.recipes_title')}" style="margin-left:6px;background:rgba(0,0,0,.18);border:2px solid #b3824f;color:var(--gold-light);padding:2px 7px;border-radius:6px;font-family:'Pixelify Sans',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;white-space:nowrap;">📜 ${t('craft.recipes_title')}</button>
     </div>
     <div class="ldoe-craft-grid">
       ${craftingSlotsHtml}
     </div>
     ${inputQueueHtml}
-    </div>
-    <!-- FAR RIGHT: o que esta bancada sabe fazer -->
-    <div class="ldoe-recipes">
-    <div class="ldoe-section-title">
-      📜 <span>${t('craft.recipes_title')}</span>
-    </div>
-    <div style="flex:1;min-height:0;overflow-y:auto;padding:6px;">
-      ${stationRecipeList(cfg, balances)}
-    </div>
     </div>
   </div>
   `;

@@ -599,18 +599,17 @@ Corrigido com `_huntEntering`: `huntPlay()` virou uma casca que tranca, chama
 Testado: 3 cliques seguidos = **1 entrada só**.
 
 ### 🆕 Bancada: botão de Receitas e "coletar antes de fabricar" (08/09/2026)
-**📜 Receitas = TERCEIRA COLUNA, fixa no canto direito**, depois da fabricação
-(`.ldoe-recipes`, `flex:0 0 178px`; 132px no celular). Sempre visível — é consulta, o jogador
-olha enquanto monta a produção.
+**📜 Receitas = UM BOTÃO que abre o `openRecipePicker`**, o mesmo seletor que já aparece ao
+clicar num slot pra escolher o que produzir. Fica no cabeçalho da coluna de Produção, à
+direita, e usa o primeiro slot livre. **Três linhas de código, tela nenhuma nova.**
 
-⚠️ **Errei duas vezes antes de acertar:** primeiro fiz popup (cobre tudo), depois pus na
-coluna da ESQUERDA alternando com o inventário (escondia o inventário). O Michel foi claro:
-*"do lado de fabricação, lá no canto direito"*. **Não inventar layout: é coluna à direita.**
+🔴 **Errei três vezes antes disso, e a lição é a mesma nas três:** fiz um popup próprio,
+depois uma aba na coluna esquerda, depois uma terceira coluna fixa — inventando telas quando
+**a tela pedida já existia no código**. O pedido dele foi: *"a única coisa que quero é um
+botão de receita pra aparecer exatamente quando a gente clica em qual a gente quer produzir"*.
 
-Como a coluna é estreita, o cartão é compacto — resultado + tempo em cima, materiais embaixo.
-Verde = tem; vermelho = falta; a moldura fica verde quando dá pra fabricar agora.
-`stationRecipeList(cfg, saldos)` devolve só o HTML. Diferente do `openRecipePicker`, que exige
-um slot e serve pra ESCOLHER; esta só mostra.
+**Antes de construir tela nova numa bancada, procure se já existe:** `openRecipePicker` (lista
+pra escolher, por slot) e `renderWorkbenchSplit` (inventário + produção) cobrem quase tudo.
 ⚠️ A chave de tradução **já existia** e chama `craft.recipes_title` — quase criei uma
 duplicada `craft.recipes`.
 
