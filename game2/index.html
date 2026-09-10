@@ -60,11 +60,15 @@ body { background-color:#06131c; image-rendering:pixelated; color: var(--parchme
    templates use, so BOTH screens (build + inventory/bench) restyle together. */
 #workbench-modal .wb-shell,#recipe-picker-modal .wb-shell{--gold-light:#3a2410;--gold-dim:#6b4a28;--gold:#8a5a2b;--parch-dark:#5d3a1a;--parch-light:#3a2410;color:#3a2410;}
 @keyframes hbCloud{from{margin-top:0;}to{margin-top:-14px;}}
-/* ⛵ Barco ancorado ao lado da ponte — só enfeite, sem clique.
-   Posição MEDIDA no PNG da ilha (540×378, desenhado em 2×): a ponte ocupa x≈196–223,
-   y≈290–340, e há uma ilhota que termina em x≈135. O barco entra no vão de água entre
-   as duas, por isso 30,2% / 84,1%. Mexeu na arte da ilha? remeça antes de mover isto. */
-#base-island .hb-boat{position:absolute;left:30.2%;top:84.1%;width:102px;height:66px;object-fit:contain;image-rendering:pixelated;pointer-events:none;z-index:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.28));animation:hb-boat-bob 3.2s ease-in-out infinite;}
+/* ⛵ Barco atracado NA FRENTE da ponte — é por ele que se viaja pras ilhas de produção.
+   Posição MEDIDA no PNG da ilha (540×378, desenhado em 2×): a ponte ocupa x≈196–223 e
+   termina em y≈340, então o barco fica logo abaixo, na água, alinhado com ela.
+   Mexeu na arte da ilha? remeça antes de mover isto. */
+/* ⚠️ `pointer-events:auto` é obrigatório: `.craft-map.base-map img` desliga o clique em
+   TODAS as imagens do mapa base (pra o mapa poder ser arrastado). Sem reativar aqui, o
+   barco fica bonito e morto — o cursor até vira de mão, mas o clique atravessa. */
+#base-island .hb-boat{position:absolute;left:38.9%;top:93.1%;width:102px;height:66px;object-fit:contain;image-rendering:pixelated;cursor:pointer;pointer-events:auto;z-index:3;filter:drop-shadow(0 2px 3px rgba(0,0,0,.28));animation:hb-boat-bob 3.2s ease-in-out infinite;}
+#base-island .hb-boat:hover{filter:drop-shadow(0 2px 3px rgba(0,0,0,.28)) brightness(1.12);}
 @keyframes hb-boat-bob{0%,100%{transform:translate(-50%,-50%) rotate(-1.2deg);}50%{transform:translate(-50%,calc(-50% - 3px)) rotate(1.2deg);}}
 #base-island .hb-station{position:absolute;transform:translate(-50%,-50%);flex:none;width:150px;max-width:150px;}
 #base-island .hb-spot{position:absolute;transform:translate(-50%,-50%);}
@@ -1718,8 +1722,9 @@ to{transform:scale(1) rotate(0);opacity:1;}
 <button class="hb-build" style="left:51%;top:42%;" onclick="homeCharClick()"><img src="https://sunflower-land.com/game-assets/buildings/manor.png" style="width:120px;" onerror="this.outerHTML='🏠'"><span class="hb-lb" data-i18n="map.house.label">🏠 Casa</span></button>
 <!-- Your bumpkin, idling by the house (name on top; click = coming soon) -->
 <div id="home-char" style="left:67%;top:57%;" onclick="homeCharClick()"><div class="hb-lb" id="home-char-name" style="position:absolute;left:50%;top:100%;transform:translate(-50%,2px);white-space:nowrap;"></div></div>
-<!-- Barco ancorado ao lado da ponte (só enfeite, não clicável) -->
-<img class="hb-boat" src="https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/decorations/restock_boat.png" alt="" onerror="this.style.display='none'">
+<!-- Barco atracado na frente da ponte: será a viagem pras ILHAS DE PRODUÇÃO
+     (fazendas, galpões de produção, criação de animais). Por ora só avisa "em breve". -->
+<img class="hb-boat" src="https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/decorations/restock_boat.png" alt="" onclick="barcoClick()" title="⛵" onerror="this.style.display='none'">
 <!-- The ELDER (level NPC): wise bumpkin standing on the road by the top stones -->
 <div class="home-npc" id="home-elder" style="left:53%;top:20%;" onclick="anciaoClick()"><img id="home-elder-shield" style="position:absolute;left:50%;bottom:100%;transform:translate(-50%,-2px);width:26px;height:26px;image-rendering:pixelated;display:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4));" alt=""><div class="hb-lb" data-i18n="map.elder.label" style="position:absolute;left:50%;top:100%;transform:translate(-50%,2px);white-space:nowrap;">🧙 Ancião</div></div>
 <!-- WORKBENCH (blacksmith bench with anvil): bottom-right corner of the island -->
@@ -2278,6 +2283,7 @@ var I18N = {
   'energy.auto_in': 'Toque pra coletar — ou o jogo coleta em {t}',
   'energy.collecting': 'Coletando...',
   'energy.no_room': '⚡ Os {n} de energia estão guardados — gaste um pouco pra caber',
+  'boat.soon': '⛵ Em breve — o barco vai te levar às ilhas de produção',
   'source.wood': 'Derrubando árvores. Gasta machado.',
   'source.stone': 'Quebrando pedras. Gasta picareta.',
   'source.iron': 'Quebrando as pedras de ferro, as escuras. Gasta picareta.',
@@ -2900,6 +2906,7 @@ var I18N = {
   'energy.auto_in': 'Tap to collect — or the game collects in {t}',
   'energy.collecting': 'Collecting...',
   'energy.no_room': '⚡ The {n} energy is being held — spend some to make room',
+  'boat.soon': '⛵ Coming soon — the boat will take you to the production islands',
   'source.wood': 'Chopping trees. Uses up axes.',
   'source.stone': 'Breaking rocks. Uses up pickaxes.',
   'source.iron': 'Breaking the iron rocks, the dark ones. Uses up pickaxes.',
@@ -4527,11 +4534,11 @@ const CHANGELOG = [
   {
     v: 'v2.0.7', date: '2026-09-09',
     pt: [
-      'Um barco ancorado ao lado da ponte, na ilha.',
+      'Um barco atracado na frente da ponte. Ele vai levar às ilhas de produção — fazendas, galpões e criação de animais. Toque nele pra ver.',
       'Botão "Receitas" na bancada: abre a lista do que ela sabe fabricar.',
     ],
     en: [
-      'A boat moored next to the bridge, on the island.',
+      'A boat docked in front of the bridge. It will sail to the production islands — farms, sheds and animal breeding. Tap it to see.',
       '"Recipes" button in the workbench: opens the list of what it can craft.',
     ],
   },
@@ -14125,6 +14132,12 @@ function loadoutRemove(key, tudo) {
   else l[key] = q;
   saveLoadout(l); renderCharLoadout();
 }
+// ⛵ Barco da ilha. 🔜 Vai levar às ILHAS DE PRODUÇÃO: fazendas, galpões de produção e
+// criação de animais. Enquanto elas não existem, só avisa que está por vir.
+function barcoClick() {
+  if (typeof showToast === 'function') showToast(t('boat.soon'), 'info');
+}
+window.barcoClick = barcoClick;
 function ferrariaClick() {
   if (typeof showToast === 'function') showToast(t('toast.workbench_soon'), 'info');
 }

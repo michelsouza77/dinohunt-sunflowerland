@@ -611,10 +611,22 @@ Como acertei a posição (vale pra qualquer enfeite novo):
    `#base-island`**, dividido pela escala — tem que cair onde você mediu.
 
 Medidas úteis desta região: **ponte x≈196–223, y≈290–340**; a **ilhota da esquerda termina em
-x≈135**. O barco ficou no vão entre as duas: `left:30.2%; top:84.1%`, 102×66 px.
+x≈135**. O barco ficou **na frente da ponte**, atracado na ponta dela:
+`left:38.9%; top:93.1%`, 102×66 px — ocupa x 184–236, y 334–367 da imagem.
 Sprite: `restock_boat.png` do SFL (68×44), achado pelo `RestockBoat.tsx` no repositório deles —
 os palpites de URL (`decorations/boat.png` etc.) deram **404**.
-É só enfeite: `pointer-events:none`, com uma balançadinha em `hb-boat-bob`.
+
+🔜 **O barco é a viagem pras ILHAS DE PRODUÇÃO** — fazendas, galpões de produção e criação de
+animais. Hoje `barcoClick()` só mostra "em breve" (`boat.soon`); é o gancho pronto pra quando
+as ilhas existirem.
+
+⚠️ **`pointer-events:auto` no barco é obrigatório.** A regra `.craft-map.base-map img` desliga
+o clique em TODAS as imagens do mapa base (pra o mapa poder ser arrastado). Sem reativar, o
+cursor até vira de mão e o clique atravessa. Vale pra qualquer enfeite clicável novo na ilha.
+
+⚠️ Ao testar clique na ilha com perfil de navegador novo, **o seletor de idioma cobre a tela**
+(`#lang-select-overlay`) e o `elementFromPoint` devolve ele, não o que você quer. Pré-defina
+`localStorage['dinohunt_lang']` antes de carregar.
 
 ### 🆕 Bancada: botão de Receitas e "coletar antes de fabricar" (08/09/2026)
 **📜 Receitas = UM BOTÃO que abre o `openRecipePicker`**, o mesmo seletor que já aparece ao
