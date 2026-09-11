@@ -598,6 +598,24 @@ Corrigido com `_huntEntering`: `huntPlay()` virou uma casca que tranca, chama
 `huntPlayInterno()` e destranca no `finally`; o botão também é desabilitado na hora.
 Testado: 3 cliques seguidos = **1 entrada só**.
 
+### 🔴 O REPOSITÓRIO MUDOU DE NOME — o endereço antigo do jogo caiu (11/09/2026)
+Outra sessão (Claude Sonnet 5, a pedido do Michel, arrumando o perfil do GitHub) renomeou
+**`Mine-defender` → `dinohunt-sunflowerland`**. Consequência:
+
+| endereço | estado |
+|---|---|
+| `michelsouza77.github.io/Mine-defender/game2/` | **404** — morreu |
+| `michelsouza77.github.io/dinohunt-sunflowerland/game2/` | **200**, com tudo atualizado |
+
+O GitHub **redireciona** o endereço antigo do repositório pro novo, então os envios de código
+continuam funcionando mesmo com o endereço velho configurado — foi por isso que os meus commits
+não acusaram nada. **Mas o GitHub Pages NÃO redireciona**: o site do endereço antigo simplesmente
+deixou de existir.
+
+⚠️ **O portal dentro do Sunflower Land aponta pro endereço antigo** — enquanto o Michel não
+trocar a URL no painel do SFL, o jogador vê o jogo velho (ou nada). A pasta local continua se
+chamando `Mine-defender`; só o nome no GitHub mudou.
+
 ### 🏝️ Ilhas de produção — PASSO 1: ilha vazia com grade (11/09/2026) — EM OBRA
 Plano completo no JARVIS: `20 Projetos/Ilhas de produção.md`.
 
