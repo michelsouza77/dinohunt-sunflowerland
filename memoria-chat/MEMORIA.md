@@ -598,6 +598,47 @@ Corrigido com `_huntEntering`: `huntPlay()` virou uma casca que tranca, chama
 `huntPlayInterno()` e destranca no `finally`; o botão também é desabilitado na hora.
 Testado: 3 cliques seguidos = **1 entrada só**.
 
+### 🏝️ Ilhas de produção — PASSO 1: ilha vazia com grade (11/09/2026) — EM OBRA
+Plano completo no JARVIS: `20 Projetos/Ilhas de produção.md`.
+
+**🔒 Só abre com o modo dev.** Abrir o jogo com **`?dev=ilhas`** (grava em
+`localStorage['dinohunt_dev_ilhas']`, então fica ligado naquele navegador); **`?dev=off`**
+desliga. Sem isso o barco continua dizendo "em breve". Motivo: **todo push vai direto pro ar
+no GitHub Pages** — feature em obra tem que ficar escondida do jogador.
+
+**Bloco autocontido**, logo depois de `barcoClick()`: cria o próprio CSS (`PROD_CSS` num
+`<style id="prod-style">`), a própria tela (`prodEnsureDom`, inserida ao lado do
+`#explore-overlay` pra herdar o mesmo palco fixo 1280×720) e os próprios textos
+(`Object.assign(I18N.pt/en, …)`). Pra remover a feature, apaga o bloco.
+
+**Não reusa o `openExplore`** — o motor da caçada é acoplado a baú, inimigo e ímã. Reusa só
+peças compartilhadas: `EXP_VIEW`/`EXP_SPAN_X`/`APP_VIEW` (câmera), `getBumpkinAnimUrls`/
+`EXP_ANIM`/`EXP_SPRITE_SCALE` (bumpkin), `EXP_MOVE_KEYS`, a textura `3x3_bg.png`, e o joystick
+(copiado). Números: `PROD_SQUARE=16` (quadrado do SFL), `PROD_BLOCK=64`,
+`PROD_START_BLOCKS=6` (384×384), `PROD_SEA=96`. **Os pés ficam presos dentro da ilha** — não
+anda na água.
+
+**A grade** é um SVG 64×64 repetido: linha fina a cada 16px, forte a cada 64px. Vetor, então
+fica nítida com o mundo ampliado ~4,5×. **Só aparece no modo construção** (decisão do Michel):
+botão 🔨 ou tecla **G**; **Esc** sai do modo, e Esc de novo sai da ilha.
+
+**Testado:** headless — tamanhos (mundo 576, ilha 384 em 96), grade liga/desliga, banner,
+fechar, sem modo dev não abre, inglês; laço rodado na mão — 50px/s, **para exatamente na água**
+(x=474, y=92), vira de lado. Navegador real (Playwright) — animação parado 0–8 / andando 9–16,
+45px em 0,9s. Print conferido: mar, ilha com borda de areia, bumpkin real, botões.
+
+⚠️ **Edge headless com `--virtual-time-budget` NÃO dispara `requestAnimationFrame`** — contei 1
+chamada em 1 segundo. Tudo que anda por rAF parece travado lá, e parece bug sem ser. Pra testar
+movimento: rodar o laço na mão (`prodLoop(t)` com `t` crescendo) ou usar o Playwright.
+
+⚠️ **O Playwright MCP abria janela VISÍVEL** na tela do Michel, e ela foi fechada duas vezes no
+meio do teste (a página virava `about:blank`). O estado da grade "virou sozinho" por isso — **não
+era bug**, e quase fui caçar um fantasma no código. Agora o `.mcp.json` tem `--headless` (vale no
+próximo reinício do VS Code).
+
+Criado **`.gitignore` na raiz** (o repositório não tinha): ignora `.playwright-mcp/` e
+`game2/__test_*.html`.
+
 ### ⛵ Barco ao lado da ponte (09/09/2026) — e como posicionar coisa na ilha
 **A ilha é um PNG em base64 dentro do CSS** (`#base-island`, linha ~57), de **540×378**
 desenhado em **2×** (elemento de 1080×756). A ponte, as pedras e as ilhotas são parte da

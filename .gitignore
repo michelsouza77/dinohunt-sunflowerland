@@ -1,0 +1,5 @@
+# Saída do Playwright MCP (prints, logs e snapshots dos testes) — não vai pro repositório.
+.playwright-mcp/
+# Cópias de teste que o Claude cria em game2/ pra rodar no Edge headless. Devem ser apagadas
+# depois do teste; isto é só a rede de segurança caso alguma sobre.
+game2/__test_*.html

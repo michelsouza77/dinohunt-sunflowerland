@@ -14132,12 +14132,285 @@ function loadoutRemove(key, tudo) {
   else l[key] = q;
   saveLoadout(l); renderCharLoadout();
 }
-// ⛵ Barco da ilha. 🔜 Vai levar às ILHAS DE PRODUÇÃO: fazendas, galpões de produção e
-// criação de animais. Enquanto elas não existem, só avisa que está por vir.
+// ⛵ Barco da ilha. Leva às ILHAS DE PRODUÇÃO: fazendas, galpões de produção e criação
+// de animais. Com o modo dev ligado (?dev=ilhas) já abre a ilha em obra; pro jogador
+// continua avisando "em breve".
 function barcoClick() {
+  if (prodDevOn()) { openProdIsland(); return; }
   if (typeof showToast === 'function') showToast(t('boat.soon'), 'info');
 }
 window.barcoClick = barcoClick;
+
+// ══ ILHAS DE PRODUÇÃO — PASSO 1: ilha vazia com grade ═════════════════════════
+// Plano completo no JARVIS: "20 Projetos/Ilhas de produção.md".
+// Bloco AUTOCONTIDO: cria a própria tela, o próprio CSS e os próprios textos na primeira
+// vez que abre. Não reusa o openExplore — o motor da caçada é acoplado a baú, inimigo e
+// ímã. Daqui só vêm as peças compartilhadas: escala da tela (EXP_VIEW/EXP_SPAN_X), o
+// sprite do bumpkin (getBumpkinAnimUrls/EXP_ANIM), a textura do chão e o joystick.
+// ⚠️ EM OBRA: só abre com o modo dev ligado. Todo push vai direto pro ar no GitHub Pages.
+//    Ligar:    abrir o jogo com ?dev=ilhas (fica gravado neste navegador)
+//    Desligar: abrir com ?dev=off
+const PROD_SQUARE = 16;         // quadrado da grade = o do SFL (16px de arte; SFL mostra a ~42px)
+const PROD_BLOCK = 64;          // bloco de terreno = a menor construção (64×64)
+const PROD_START_BLOCKS = 6;    // ilha inicial 6×6 blocos = 384×384 → cabem 4 fábricas de 128×128
+const PROD_SEA = 96;            // mar em volta da ilha (px de arte)
+const PROD = {
+  x: 0, y: 0, vx: 0, vy: 0, speed: 50, facing: 'right', raf: null, lastT: 0,
+  sheetCols: 0, animFrame: 0, animAcc: 0, building: false, blocks: PROD_START_BLOCKS, keys: {},
+};
+function prodIslandPx() { return PROD.blocks * PROD_BLOCK; }
+function prodDevOn() { try { return localStorage.getItem('dinohunt_dev_ilhas') === '1'; } catch (e) { return false; } }
+(function () {
+  const d = urlParams.get('dev');
+  try {
+    if (d === 'ilhas') localStorage.setItem('dinohunt_dev_ilhas', '1');
+    else if (d === 'off') localStorage.removeItem('dinohunt_dev_ilhas');
+  } catch (e) {}
+})();
+Object.assign(I18N.pt, {
+  'prod.title': '🌱 Ilha de Produção',
+  'prod.exit': '⬅ Voltar',
+  'prod.build': '🔨 Construir',
+  'prod.build_done': '✅ Pronto',
+  'prod.build_banner': '🔨 Modo construção · ilha de {w}×{h} blocos',
+  'prod.build_next': 'Posicionar construções chega no próximo passo',
+});
+Object.assign(I18N.en, {
+  'prod.title': '🌱 Production Island',
+  'prod.exit': '⬅ Back',
+  'prod.build': '🔨 Build',
+  'prod.build_done': '✅ Done',
+  'prod.build_banner': '🔨 Build mode · {w}×{h}-block island',
+  'prod.build_next': 'Placing buildings comes in the next step',
+});
+// A GRADE: um SVG de 64×64 (1 bloco) repetido. Linhas finas a cada 16px (quadrado do SFL)
+// e linha forte a cada 64px (bloco de terreno). É vetor, então fica nítida mesmo com o
+// mundo ampliado ~4,5×. A borda direita/de baixo do último bloco vem do box-shadow.
+const PROD_CSS = `
+#prod-overlay{display:none;position:fixed;inset:0;z-index:4000;background:#0a0805;overflow:hidden;touch-action:none;}
+#prod-overlay.open{display:block;}
+#prod-viewport{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:1000px;height:620px;overflow:hidden;background:#0099db;border-radius:10px;box-shadow:0 0 0 3px rgba(0,0,0,.55),0 0 0 5px rgba(255,255,255,.07),0 14px 46px rgba(0,0,0,.6);}
+#prod-world{position:absolute;top:0;left:0;will-change:transform;image-rendering:pixelated;background:#0099db;}
+#prod-ground{position:absolute;background-color:#63a14a;background-image:url("https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/ui/3x3_bg.png");background-size:48px 48px;background-repeat:repeat;image-rendering:pixelated;box-shadow:0 0 0 3px #e0c08c,0 0 0 4px #c89a5e;}
+#prod-grid{position:absolute;display:none;pointer-events:none;background-size:64px 64px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M16 0V64M32 0V64M48 0V64M0 16H64M0 32H64M0 48H64' stroke='rgba(255,255,255,0.22)' stroke-width='0.35' fill='none'/%3E%3Cpath d='M0 0V64M0 0H64' stroke='rgba(255,255,255,0.6)' stroke-width='1.4' fill='none'/%3E%3C/svg%3E");box-shadow:inset -0.7px -0.7px 0 rgba(255,255,255,.6);}
+#prod-grid.show{display:block;}
+#prod-char{position:absolute;width:84px;height:56px;transform:translate(-50%,-50%);z-index:5;}
+#prod-char-img{width:100%;height:100%;background-repeat:no-repeat;image-rendering:pixelated;display:block;font-size:40px;text-align:center;line-height:56px;}
+#prod-char-img.flip{transform:scaleX(-1);}
+#prod-title{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-family:'Pixelify Sans',monospace;font-size:18px;font-weight:700;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.6);pointer-events:none;z-index:10;white-space:nowrap;}
+#prod-build-banner{position:absolute;top:44px;left:50%;transform:translateX(-50%);font-family:'Pixelify Sans',monospace;font-size:13px;color:#ffe08a;background:rgba(0,0,0,.55);padding:4px 12px;border-radius:8px;pointer-events:none;z-index:10;white-space:nowrap;}
+#prod-build-btn,#prod-exit-btn{position:absolute;z-index:10;font-family:'Pixelify Sans',monospace;font-size:16px;font-weight:700;color:#fff;padding:10px 16px;cursor:pointer;image-rendering:pixelated;border-style:solid;border-width:5.25px;border-image:url("https://sunflower-land.com/game-assets/ui/panel/light_border.png") 20%;border-image-repeat:stretch;border-radius:13px;text-shadow:1px 1px 0 rgba(0,0,0,.4);}
+#prod-build-btn{right:14px;bottom:14px;background-color:#63c74d;}
+#prod-exit-btn{right:14px;top:10px;background-color:#b96f50;}
+#prod-joystick{position:absolute;bottom:40px;left:40px;width:120px;height:120px;z-index:10;background:rgba(45,40,64,.35);border:3px solid rgba(255,255,255,.4);border-radius:50%;touch-action:none;}
+#prod-joystick-knob{position:absolute;top:50%;left:50%;width:54px;height:54px;transform:translate(-50%,-50%);background:rgba(255,255,255,.7);border:3px solid #2d2840;border-radius:50%;pointer-events:none;}
+@media (pointer:fine), (min-width:900px){#prod-joystick{display:none;}}
+`;
+function prodEnsureDom() {
+  if (document.getElementById('prod-overlay')) return;
+  const st = document.createElement('style');
+  st.id = 'prod-style';
+  st.textContent = PROD_CSS;
+  document.head.appendChild(st);
+  const ov = document.createElement('div');
+  ov.id = 'prod-overlay';
+  ov.innerHTML = `
+    <div id="prod-viewport">
+      <div id="prod-world">
+        <div id="prod-ground"></div>
+        <div id="prod-grid"></div>
+        <div id="prod-char"><div id="prod-char-img"></div></div>
+      </div>
+      <div id="prod-title"></div>
+      <div id="prod-build-banner" style="display:none"></div>
+      <button id="prod-build-btn" onclick="prodToggleBuild()"></button>
+      <button id="prod-exit-btn" onclick="closeProdIsland()"></button>
+      <div id="prod-joystick"><div id="prod-joystick-knob"></div></div>
+    </div>`;
+  // Mesmo pai da tela da caçada: assim herda o mesmo "palco" fixo 1280×720 no PC.
+  const ex = document.getElementById('explore-overlay');
+  if (ex && ex.parentNode) ex.parentNode.insertBefore(ov, ex); else document.body.appendChild(ov);
+}
+function openProdIsland() {
+  prodEnsureDom();
+  const ov = document.getElementById('prod-overlay');
+  const W = prodIslandPx(), full = W + PROD_SEA * 2;
+  const world = document.getElementById('prod-world');
+  world.style.width = full + 'px';
+  world.style.height = full + 'px';
+  world.style.transformOrigin = '0 0';
+  for (const id of ['prod-ground', 'prod-grid']) {
+    const el = document.getElementById(id);
+    el.style.left = PROD_SEA + 'px'; el.style.top = PROD_SEA + 'px';
+    el.style.width = W + 'px'; el.style.height = W + 'px';
+  }
+  document.getElementById('prod-title').textContent = t('prod.title');
+  document.getElementById('prod-exit-btn').textContent = t('prod.exit');
+  // Começa no meio da ilha, parado, olhando pra direita.
+  PROD.x = PROD_SEA + W / 2;
+  PROD.y = PROD_SEA + W / 2;
+  PROD.vx = 0; PROD.vy = 0; PROD.lastT = 0; PROD.animAcc = 0;
+  for (const k in PROD.keys) PROD.keys[k] = false;
+  prodSetBuilding(false);
+  prodLoadSprite();
+  ov.classList.add('open');
+  window.addEventListener('keydown', prodKeyDown);
+  window.addEventListener('keyup', prodKeyUp);
+  window.addEventListener('resize', prodApplyView);
+  prodSetupJoystick();
+  prodApplyView();
+  if (PROD.raf) cancelAnimationFrame(PROD.raf);
+  PROD.raf = requestAnimationFrame(prodLoop);
+}
+function closeProdIsland() {
+  const ov = document.getElementById('prod-overlay');
+  if (ov) ov.classList.remove('open');
+  if (PROD.raf) cancelAnimationFrame(PROD.raf);
+  PROD.raf = null;
+  window.removeEventListener('keydown', prodKeyDown);
+  window.removeEventListener('keyup', prodKeyUp);
+  window.removeEventListener('resize', prodApplyView);
+  for (const k in PROD.keys) PROD.keys[k] = false;
+  PROD.vx = 0; PROD.vy = 0;
+}
+// Mesma "câmera" da caçada: caixa fixa EXP_VIEW, escalada inteira pra caber na tela,
+// mostrando sempre EXP_SPAN_X px de mundo na largura (mesmo zoom em qualquer tela).
+function prodApplyView() {
+  const vp = document.getElementById('prod-viewport');
+  if (!vp) return;
+  const fixed = (typeof _appFixed !== 'undefined' && _appFixed);
+  const availW = fixed ? APP_VIEW.w : window.innerWidth;
+  const availH = fixed ? APP_VIEW.h : window.innerHeight;
+  const s = Math.min(availW / EXP_VIEW.w, availH / EXP_VIEW.h);
+  vp.style.width = EXP_VIEW.w + 'px';
+  vp.style.height = EXP_VIEW.h + 'px';
+  vp.style.transform = `translate(-50%,-50%) scale(${s})`;
+  prodUpdateCamera();
+}
+function prodUpdateCamera() {
+  const world = document.getElementById('prod-world');
+  const ch = document.getElementById('prod-char');
+  if (!world) return;
+  const z = EXP_VIEW.w / EXP_SPAN_X;
+  if (ch) { ch.style.left = PROD.x + 'px'; ch.style.top = PROD.y + 'px'; }
+  world.style.transform = `translate(${EXP_VIEW.w / 2 - PROD.x * z}px, ${EXP_VIEW.h / 2 - PROD.y * z}px) scale(${z})`;
+}
+function prodLoadSprite() {
+  const el = document.getElementById('prod-char-img');
+  if (!el) return;
+  const url = getBumpkinAnimUrls().sheet;
+  el.classList.remove('flip');
+  PROD.facing = 'right';
+  if (PROD._sheetUrl === url && PROD.sheetCols) { prodSetFrame(EXP_ANIM.idle[0]); return; }
+  PROD.sheetCols = 0;
+  const im = new Image();
+  im.onload = () => {
+    PROD._sheetUrl = url;
+    PROD.sheetCols = Math.max(1, Math.round(im.naturalWidth / EXP_FRAME_W));
+    el.textContent = '';
+    el.style.backgroundImage = `url("${url}")`;
+    el.style.backgroundSize = `${im.naturalWidth * EXP_SPRITE_SCALE}px ${im.naturalHeight * EXP_SPRITE_SCALE}px`;
+    prodSetFrame(EXP_ANIM.idle[0]);
+  };
+  im.onerror = () => { el.textContent = '🧑‍🌾'; };
+  im.src = url;
+}
+function prodSetFrame(i) {
+  const el = document.getElementById('prod-char-img');
+  if (!el || !PROD.sheetCols) return;
+  PROD.animFrame = i;
+  const col = i % PROD.sheetCols, row = Math.floor(i / PROD.sheetCols);
+  el.style.backgroundPosition = `-${col * EXP_FRAME_W * EXP_SPRITE_SCALE}px -${row * EXP_FRAME_H * EXP_SPRITE_SCALE}px`;
+}
+function prodKeyDown(e) {
+  const k = e.key.toLowerCase();
+  PROD.keys[k] = true;
+  if (EXP_MOVE_KEYS[k]) { e.preventDefault(); return; }   // setas movem o boneco, nunca rolam a página
+  if (e.repeat) return;
+  if (k === 'g') { e.preventDefault(); prodToggleBuild(); }
+  else if (k === 'escape') { e.preventDefault(); if (PROD.building) prodSetBuilding(false); else closeProdIsland(); }
+}
+function prodKeyUp(e) { PROD.keys[e.key.toLowerCase()] = false; }
+function prodSetupJoystick() {
+  const joy = document.getElementById('prod-joystick');
+  const knob = document.getElementById('prod-joystick-knob');
+  if (!joy || joy._setup) return;
+  joy._setup = true;
+  let active = false, cx = 0, cy = 0;
+  const move = (px, py) => {
+    if (!active) return;
+    let dx = px - cx, dy = py - cy;
+    const max = 40, dist = Math.hypot(dx, dy);
+    if (dist > max) { dx = dx / dist * max; dy = dy / dist * max; }
+    knob.style.left = `calc(50% + ${dx}px)`; knob.style.top = `calc(50% + ${dy}px)`;
+    PROD.vx = dx / max; PROD.vy = dy / max;
+  };
+  const start = (px, py) => { active = true; const r = joy.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; move(px, py); };
+  const end = () => { active = false; PROD.vx = 0; PROD.vy = 0; knob.style.left = '50%'; knob.style.top = '50%'; };
+  joy.addEventListener('touchstart', e => { e.preventDefault(); start(e.touches[0].clientX, e.touches[0].clientY); });
+  joy.addEventListener('touchmove', e => { e.preventDefault(); move(e.touches[0].clientX, e.touches[0].clientY); });
+  joy.addEventListener('touchend', e => { e.preventDefault(); end(); });
+}
+function prodLoop(t) {
+  const now = t || performance.now();
+  if (!PROD.lastT) PROD.lastT = now;
+  let dt = (now - PROD.lastT) / 1000;
+  PROD.lastT = now;
+  if (dt > 0.1) dt = 0.1;
+  const K = PROD.keys;
+  let mx = PROD.vx + ((K['arrowright'] || K['d']) ? 1 : 0) - ((K['arrowleft'] || K['a']) ? 1 : 0);
+  let my = PROD.vy + ((K['arrowdown'] || K['s']) ? 1 : 0) - ((K['arrowup'] || K['w']) ? 1 : 0);
+  const mag = Math.hypot(mx, my);
+  const moving = mag > 0.12;
+  if (moving) {
+    if (mag > 1) { mx /= mag; my /= mag; }
+    PROD.x += mx * PROD.speed * dt;
+    PROD.y += my * PROD.speed * dt;
+    // Não anda na água: os PÉS ficam dentro da ilha (o boneco é ancorado no centro do
+    // sprite, e os pés ficam EXP_PLAYER_FEET px abaixo dele).
+    const W = prodIslandPx(), x0 = PROD_SEA, y0 = PROD_SEA, feet = EXP_PLAYER_FEET;
+    PROD.x = Math.max(x0 + 6, Math.min(x0 + W - 6, PROD.x));
+    PROD.y = Math.max(y0 + 2 - feet, Math.min(y0 + W - 2 - feet, PROD.y));
+    const img = document.getElementById('prod-char-img');
+    if (mx < -0.05 && PROD.facing !== 'left') { PROD.facing = 'left'; if (img) img.classList.add('flip'); }
+    else if (mx > 0.05 && PROD.facing !== 'right') { PROD.facing = 'right'; if (img) img.classList.remove('flip'); }
+    PROD._stepAcc = (PROD._stepAcc || 0) + dt;
+    if (PROD._stepAcc >= 0.34) { PROD._stepAcc = 0; if (typeof playSfx === 'function') playSfx('step', 0.2); }
+  }
+  if (PROD.sheetCols) {
+    PROD.animAcc += dt;
+    if (PROD.animAcc >= 1 / EXP_ANIM_FPS) {
+      PROD.animAcc = 0;
+      const r = moving ? EXP_ANIM.walk : EXP_ANIM.idle;
+      let f = PROD.animFrame + 1;
+      if (f < r[0] || f > r[1]) f = r[0];
+      prodSetFrame(f);
+    }
+  }
+  prodUpdateCamera();
+  PROD.raf = requestAnimationFrame(prodLoop);
+}
+// A grade só aparece no MODO CONSTRUÇÃO (decisão do Michel) — o resto do tempo a ilha
+// parece um desenho normal, igual ao SFL.
+function prodSetBuilding(on) {
+  PROD.building = !!on;
+  const grid = document.getElementById('prod-grid');
+  const btn = document.getElementById('prod-build-btn');
+  const banner = document.getElementById('prod-build-banner');
+  if (grid) grid.classList.toggle('show', PROD.building);
+  if (btn) btn.textContent = PROD.building ? t('prod.build_done') : t('prod.build');
+  if (banner) {
+    banner.style.display = PROD.building ? '' : 'none';
+    banner.textContent = t('prod.build_banner', { w: PROD.blocks, h: PROD.blocks });
+  }
+}
+function prodToggleBuild() {
+  prodSetBuilding(!PROD.building);
+  if (PROD.building && typeof showToast === 'function') showToast(t('prod.build_next'), 'info');
+}
+window.openProdIsland = openProdIsland;
+window.closeProdIsland = closeProdIsland;
+window.prodToggleBuild = prodToggleBuild;
 function ferrariaClick() {
   if (typeof showToast === 'function') showToast(t('toast.workbench_soon'), 'info');
 }
