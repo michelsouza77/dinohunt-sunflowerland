@@ -631,10 +631,21 @@ fechar, sem modo dev não abre, inglês; laço rodado na mão — 50px/s, **para
 chamada em 1 segundo. Tudo que anda por rAF parece travado lá, e parece bug sem ser. Pra testar
 movimento: rodar o laço na mão (`prodLoop(t)` com `t` crescendo) ou usar o Playwright.
 
-⚠️ **O Playwright MCP abria janela VISÍVEL** na tela do Michel, e ela foi fechada duas vezes no
-meio do teste (a página virava `about:blank`). O estado da grade "virou sozinho" por isso — **não
-era bug**, e quase fui caçar um fantasma no código. Agora o `.mcp.json` tem `--headless` (vale no
-próximo reinício do VS Code).
+⚠️ **O Playwright MCP abria janela VISÍVEL** na tela do Michel, e a página virou `about:blank`
+duas vezes no meio do teste. No mesmo intervalo o modo construção "ligou sozinho".
+**Explicação mais provável, NÃO provada:** alguém mexeu na janela (clicou em Construir ou
+apertou G). A favor: o teste isolado no headless liga a grade certo, e os únicos pontos do código
+que escrevem `PROD.building` são o botão, a tecla G e o Esc. **Se voltar a acontecer sem janela
+aberta, é bug e precisa investigar.** Agora o `.mcp.json` tem `--headless` (vale no próximo
+reinício do VS Code).
+
+🔴 **Não mate todos os `node.exe` pra parar o servidor de teste.** Nesta máquina rodam outros
+node ao mesmo tempo: os servidores MCP (playwright, github) e **o bot do Bombcrypto**
+(`node -r ./build/websocket.js … build/index.js`, projeto `supreme-bot-bombcrypto`). O comando
+que usei várias vezes entre 06 e 10/09 (`Get-Process node | Where Path -like "*nodejs*" |
+Stop-Process`) pegava **todos eles, inclusive o bot** — então toda vez que o bot estava no ar,
+eu derrubei ele. Pare só o `http-server`, filtrando pela linha de comando:
+`Get-CimInstance Win32_Process -Filter "Name='node.exe'"` e `CommandLine -match 'http-server'`.
 
 Criado **`.gitignore` na raiz** (o repositório não tinha): ignora `.playwright-mcp/` e
 `game2/__test_*.html`.
