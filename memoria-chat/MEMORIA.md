@@ -598,6 +598,26 @@ Corrigido com `_huntEntering`: `huntPlay()` virou uma casca que tranca, chama
 `huntPlayInterno()` e destranca no `finally`; o botão também é desabilitado na hora.
 Testado: 3 cliques seguidos = **1 entrada só**.
 
+### 🔴 EXISTEM DUAS CÓPIAS DO JOGO NO PC DO MICHEL (11/09/2026) — causa de "não atualiza"
+| cópia | estado |
+|---|---|
+| `Documents\GitHub\Mine-defender\game2\index.html` | **a verdadeira** — é a que eu edito e a que está no GitHub |
+| `Documents\dinohunt\index.html` | **cópia solta**, parada em 09/09, sem controle de versão, sozinha na pasta |
+
+Comparação em 11/09: a cópia solta **não tem** o barco na ponte, a ilha de produção nem a
+versão v2.0.7. Tem só o que existia até 09/09.
+
+O Michel reclamou que "não está atualizando"; a causa é olhar/subir a cópia solta. **Ele sobe o
+HTML no painel do SFL** (não usa o endereço do GitHub Pages pro jogo!), então subir a cópia
+errada leva código velho pros jogadores.
+
+⚠️ **Isto é reincidente** — a mesma pasta `Documents\dinohunt` já tinha causado confusão antes.
+Quando ele disser que algo não aparece, **conferir a data dos dois arquivos ANTES de procurar bug.**
+
+⚠️ Também **corrigi uma orientação errada minha**: eu disse pra ele trocar a URL no painel do SFL
+por causa da renomeação do repositório. **Não se aplica** — como ele sobe o arquivo, o nome no
+GitHub não afeta os jogadores.
+
 ### 🔴 O REPOSITÓRIO MUDOU DE NOME — o endereço antigo do jogo caiu (11/09/2026)
 Outra sessão (Claude Sonnet 5, a pedido do Michel, arrumando o perfil do GitHub) renomeou
 **`Mine-defender` → `dinohunt-sunflowerland`**. Consequência:
