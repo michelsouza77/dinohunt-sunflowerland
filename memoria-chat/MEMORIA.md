@@ -698,11 +698,29 @@ da ilha.
 - O botão "Voltar" saiu: **clicar no barco sai da ilha**. Entrou o botão **🎒 mochila** (canto
   de cima à direita), que lista os itens da conta — é com eles que a construção vai gastar.
 
+🔴 **A mochila da ilha é a MESMA da caçada** (pedido do Michel). Não copiei estilo: as peças
+`.exp-bp-window`, `.exp-bp-title`, `.exp-bp-grid`, `.ldoe-slot` e `.exp-bp-close` são **globais**,
+então o painel da ilha usa a mesma marcação do `renderBackpackGrid`. Fundo escuro igual ao do
+`#exp-backpack-panel`, e clicar fora fecha.
+
+🔴 **O barco da ilha nasceu com `pointer-events:none`** — copiei do barco decorativo — e por isso
+**não saía da ilha ao clicar**, embora o teste dissesse que sim. Motivo: `dispatchEvent` no teste
+**ignora `pointer-events`**. ⚠️ **Teste de clique só vale com `elementFromPoint` no centro do
+elemento**, conferindo que o alvo é ele mesmo. Segunda vez que isso me pega (a primeira foi o
+barco da ilha principal).
+
 🔴 **CRASE DENTRO DE TEMPLATE LITERAL DERRUBA O JOGO INTEIRO.** Escrevi um comentário com
 ``` `public/offline/ocean.webp` ``` dentro do `PROD_CSS`, que é um template literal — a crase
 **fechou a string**, virou `SyntaxError`, e **todo o script morreu** (`showToast` ficou
 `undefined`, o barco parou de responder, nada funcionava). Sintoma clássico: **quebra coisa
 que não tem nada a ver**. Pra achar: um ouvinte de erro no `<head>` mostra a linha exata.
+
+⚠️ **Aconteceu DUAS VEZES no mesmo dia**, no mesmo bloco — a segunda vinte minutos depois de eu
+escrever o aviso acima, em outro comentário (`dispatchEvent` entre crases). Então:
+**1)** depois de mexer no `PROD_CSS`, varra o bloco procurando crase;
+**2)** **rode o teste de carga ANTES de commitar** — carregar a página com um ouvinte de erro no
+`<head>` e conferir `typeof showToast`. São 30 segundos e pega exatamente esta classe de erro,
+que é a mais destrutiva do projeto.
 
 🔴 **Ao renomear um id no CSS, troque em TODAS as regras.** Mudei `#prod-exit-btn` pra
 `#prod-bag-btn` só na regra de posição e esqueci a regra compartilhada com o botão Construir —
