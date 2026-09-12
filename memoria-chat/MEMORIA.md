@@ -698,6 +698,17 @@ da ilha.
 - O botão "Voltar" saiu: **clicar no barco sai da ilha**. Entrou o botão **🎒 mochila** (canto
   de cima à direita), que lista os itens da conta — é com eles que a construção vai gastar.
 
+🔴 **OS BOTÕES DA ILHA ENTRAM NAS REGRAS DA CAÇADA** — não têm estilo próprio. O Michel foi
+literal: *"quando eu digo igual o modo caçada digo exatamente… no mesmo exato lugar, até a img"*.
+Então `#prod-bag-btn` foi acrescentado ao seletor de `#exp-backpack-btn`, e `#prod-build-btn` ao
+de `#exp-hand-btn` (mais `img`, `:active` e o brilho `.ready` → `.on`). **Mexeu no botão da
+caçada, mexeu no da ilha junto** — é de propósito.
+Conferido medida a medida: mochila 60×60 em `bottom:112px / right:28px`; construir 72×72 em
+`bottom:26px / right:22px`; mesmo raio, mesma borda, **e a mesma imagem** (`sack.png`).
+O construir usa o martelo oficial `sunflower-land.com/game-assets/icons/hammer.png`.
+⚠️ O botão de construir **não troca mais o texto** (isso apagava o ícone): ele acende pela
+classe `.on`.
+
 🔴 **A mochila da ilha é a MESMA da caçada** (pedido do Michel). Não copiei estilo: as peças
 `.exp-bp-window`, `.exp-bp-title`, `.exp-bp-grid`, `.ldoe-slot` e `.exp-bp-close` são **globais**,
 então o painel da ilha usa a mesma marcação do `renderBackpackGrid`. Fundo escuro igual ao do

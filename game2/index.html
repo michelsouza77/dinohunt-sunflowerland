@@ -1207,15 +1207,15 @@ to{transform:scale(1) rotate(0);opacity:1;}
 .exp-chest.exp-chest-l3{filter:drop-shadow(0 0 4px rgba(255,215,60,1));}
 .exp-chest.near{transform:translate(-50%,-100%) scale(1.15);}
 .exp-chest.opened{opacity:.45;filter:grayscale(.5) brightness(.8);pointer-events:none;}
-#exp-hand-btn{position:absolute;bottom:26px;right:22px;z-index:4010;width:72px;height:72px;background:rgba(45,40,64,.35);border:3px solid rgba(255,255,255,.4);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-sizing:border-box;transition:transform .1s;}
-#exp-hand-btn img{width:58%;height:58%;object-fit:contain;image-rendering:pixelated;pointer-events:none;}
-#exp-hand-btn:active{transform:scale(.92);}
+#exp-hand-btn,#prod-build-btn{position:absolute;bottom:26px;right:22px;z-index:4010;width:72px;height:72px;background:rgba(45,40,64,.35);border:3px solid rgba(255,255,255,.4);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-sizing:border-box;transition:transform .1s;}
+#exp-hand-btn img,#prod-build-btn img{width:58%;height:58%;object-fit:contain;image-rendering:pixelated;pointer-events:none;}
+#exp-hand-btn:active,#prod-build-btn:active{transform:scale(.92);}
 #exp-mute-btn{position:absolute;top:14px;right:14px;z-index:4010;width:40px;height:40px;background:rgba(45,40,64,.4);border:3px solid rgba(255,255,255,.4);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:19px;padding:0;box-sizing:border-box;}
 #exp-mute-btn:active{transform:scale(.92);}
 #exp-vol-panel{position:fixed;top:62px;right:14px;z-index:4200;flex-direction:column;gap:10px;width:196px;padding:12px 14px;box-sizing:border-box;background-color:#e4a672;image-rendering:pixelated;border-style:solid;border-width:5.25px;border-image:url("https://sunflower-land.com/game-assets/ui/panel/light_border.png") 20%;border-image-repeat:stretch;border-radius:13px;box-shadow:0 6px 20px rgba(0,0,0,.5);}
 #exp-vol-panel .vol-row{display:flex;flex-direction:column;gap:3px;font-family:'Pixelify Sans',monospace;font-size:12px;font-weight:700;color:#3a2410;}
 #exp-vol-panel input[type=range]{width:100%;accent-color:#8a5a2b;cursor:pointer;}
-#exp-hand-btn.ready{background:rgba(255,224,138,.45);border-color:#ffe08a;animation:handPulse .7s infinite;box-shadow:0 0 12px rgba(255,215,60,.85);}
+#exp-hand-btn.ready,#prod-build-btn.on{background:rgba(255,224,138,.45);border-color:#ffe08a;animation:handPulse .7s infinite;box-shadow:0 0 12px rgba(255,215,60,.85);}
 @keyframes handPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.13);}}
 #exp-loot-panel{position:fixed;inset:0;z-index:4030;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);padding:14px;backdrop-filter:blur(3px);}
 .exp-loot-modal{width:100%;max-width:560px;max-height:calc(var(--apph) * 0.84);display:flex;flex-direction:column;background-color:#c98a64;image-rendering:pixelated;border-style:solid;border-width:5.25px;border-image:url("https://sunflower-land.com/game-assets/ui/panel/light_border.png") 20%;border-image-repeat:stretch;border-radius:13px;overflow:hidden;box-sizing:border-box;}
@@ -1314,8 +1314,8 @@ to{transform:scale(1) rotate(0);opacity:1;}
    no slot da mochila de perna recebe a marca verde, pra você saber qual é. */
 .exp-bp-powerup{cursor:pointer;}
 .exp-bp-powerup.equipped{outline:2px solid #63c74d;outline-offset:-2px;}
-#exp-backpack-btn{position:absolute;bottom:112px;right:28px;z-index:4010;width:60px;height:60px;background:rgba(45,40,64,.35);border:3px solid rgba(255,255,255,.4);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-sizing:border-box;}
-#exp-backpack-btn img{width:60%;height:60%;object-fit:contain;image-rendering:pixelated;}
+#exp-backpack-btn,#prod-bag-btn{position:absolute;bottom:112px;right:28px;z-index:4010;width:60px;height:60px;background:rgba(45,40,64,.35);border:3px solid rgba(255,255,255,.4);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-sizing:border-box;}
+#exp-backpack-btn img,#prod-bag-btn img{width:60%;height:60%;object-fit:contain;image-rendering:pixelated;}
 /* Explore reward screen */
 #explore-rewards{position:fixed;inset:0;z-index:4030;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;}
 .exp-rw-box{max-width:360px;width:100%;background-color:#e4a672;image-rendering:pixelated;border-style:solid;border-width:5.25px;border-image:url("https://sunflower-land.com/game-assets/ui/panel/light_border.png") 20%;border-image-repeat:stretch;border-radius:13px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:14px;}
@@ -14250,9 +14250,9 @@ const PROD_CSS = `
 #prod-char-img.flip{transform:scaleX(-1);}
 #prod-title{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-family:'Pixelify Sans',monospace;font-size:18px;font-weight:700;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.6);pointer-events:none;z-index:10;white-space:nowrap;}
 #prod-build-banner{position:absolute;top:44px;left:50%;transform:translateX(-50%);font-family:'Pixelify Sans',monospace;font-size:13px;color:#ffe08a;background:rgba(0,0,0,.55);padding:4px 12px;border-radius:8px;pointer-events:none;z-index:10;white-space:nowrap;}
-#prod-build-btn,#prod-bag-btn{position:absolute;z-index:10;font-family:'Pixelify Sans',monospace;font-size:16px;font-weight:700;color:#fff;padding:10px 16px;cursor:pointer;image-rendering:pixelated;border-style:solid;border-width:5.25px;border-image:url("https://sunflower-land.com/game-assets/ui/panel/light_border.png") 20%;border-image-repeat:stretch;border-radius:13px;text-shadow:1px 1px 0 rgba(0,0,0,.4);}
-#prod-build-btn{right:14px;bottom:14px;background-color:#63c74d;}
-#prod-bag-btn{right:14px;top:10px;background-color:#b96f50;font-size:20px;padding:8px 12px;}
+/* Os botões da ilha NÃO têm estilo próprio: eles entram nas mesmas regras dos botões do modo
+   caçada (procure por #exp-hand-btn e #exp-backpack-btn no CSS principal). Assim ficam no
+   mesmo lugar, do mesmo tamanho e com a mesma cara — e continuam iguais se a caçada mudar. */
 /* Mochila: MESMO visual da mochila do modo caçada. As peças (.exp-bp-window, .exp-bp-title,
    .exp-bp-grid, .ldoe-slot, .exp-bp-close) são globais, então dá pra reusar sem copiar estilo.
    Só a camada escura de fundo é daqui, e é igual à do #exp-backpack-panel. */
@@ -14281,8 +14281,12 @@ function prodEnsureDom() {
       </div>
       <div id="prod-title"></div>
       <div id="prod-build-banner" style="display:none"></div>
-      <button id="prod-build-btn" onclick="prodToggleBuild()"></button>
-      <button id="prod-bag-btn" onclick="prodToggleMochila()" title="Mochila">🎒</button>
+      <button id="prod-build-btn" onclick="prodToggleBuild()" title="Construir">
+        <img src="https://sunflower-land.com/game-assets/icons/hammer.png" alt="" onerror="this.outerHTML='🔨'">
+      </button>
+      <button id="prod-bag-btn" onclick="prodToggleMochila()" title="Mochila">
+        <img src="https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/icons/sack.png" alt="" onerror="this.outerHTML='🎒'">
+      </button>
       <div id="prod-joystick"><div id="prod-joystick-knob"></div></div>
     </div>`;
   // Mesmo pai da tela da caçada: assim herda o mesmo "palco" fixo 1280×720 no PC.
@@ -14465,7 +14469,7 @@ function prodSetBuilding(on) {
   const btn = document.getElementById('prod-build-btn');
   const banner = document.getElementById('prod-build-banner');
   if (grid) grid.classList.toggle('show', PROD.building);
-  if (btn) btn.textContent = PROD.building ? t('prod.build_done') : t('prod.build');
+  if (btn) btn.classList.toggle('on', PROD.building);   // icone fica; so acende
   if (banner) {
     banner.style.display = PROD.building ? '' : 'none';
     banner.textContent = t('prod.build_banner', { w: PROD.blocks, h: PROD.blocks });
