@@ -14152,7 +14152,29 @@ window.barcoClick = barcoClick;
 const PROD_SQUARE = 16;         // quadrado da grade = o do SFL (16px de arte; SFL mostra a ~42px)
 const PROD_BLOCK = 64;          // bloco de terreno = a menor construção (64×64)
 const PROD_START_BLOCKS = 6;    // ilha inicial 6×6 blocos = 384×384 → cabem 4 fábricas de 128×128
-const PROD_SEA = 96;            // mar em volta da ilha (px de arte)
+const PROD_SEA = 128;           // mar em volta da ilha (px de arte) — largo o bastante pra
+                                // sempre sobrar água na tela quando o jogador anda na beirada
+// TERRENO LIBERADO. Cada item é um bloco de 64×64 (os "16 espacinhos" de 16px que o Michel
+// conta). Começa com UM só, o do canto de cima à esquerda; o resto fica escuro e com cadeado
+// até ser comprado. É aqui que a escada de expansão vai mexer (1 degrau = mais blocos).
+const PROD_UNLOCKED_START = ['0,0'];
+function prodBlockLiberado(bx, by) { return (PROD.unlocked || []).indexOf(bx + ',' + by) >= 0; }
+const PROD_LOCK_IMG = 'https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/icons/lock.png';
+// Escurece cada bloco ainda não liberado e põe o cadeado no meio dele.
+// Redesenhar é só chamar de novo — é o que a expansão vai fazer quando comprar um bloco.
+function prodDesenhaTerreno() {
+  const camada = document.getElementById('prod-locks');
+  if (!camada) return;
+  let html = '';
+  for (let by = 0; by < PROD.blocks; by++) {
+    for (let bx = 0; bx < PROD.blocks; bx++) {
+      if (prodBlockLiberado(bx, by)) continue;
+      html += `<div class="prod-lock" style="left:${bx * PROD_BLOCK}px;top:${by * PROD_BLOCK}px;">`
+            + `<img src="${PROD_LOCK_IMG}" alt="" onerror="this.outerHTML='🔒'"></div>`;
+    }
+  }
+  camada.innerHTML = html;
+}
 const PROD = {
   x: 0, y: 0, vx: 0, vy: 0, speed: 50, facing: 'right', raf: null, lastT: 0,
   sheetCols: 0, animFrame: 0, animAcc: 0, building: false, blocks: PROD_START_BLOCKS, keys: {},
@@ -14202,7 +14224,17 @@ const PROD_CSS = `
 #prod-overlay{display:none;position:fixed;inset:0;z-index:4000;background:#0a0805;overflow:hidden;touch-action:none;}
 #prod-overlay.open{display:block;}
 #prod-viewport{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:1000px;height:620px;overflow:hidden;background:#0099db;border-radius:10px;box-shadow:0 0 0 3px rgba(0,0,0,.55),0 0 0 5px rgba(255,255,255,.07),0 14px 46px rgba(0,0,0,.6);}
-#prod-world{position:absolute;top:0;left:0;will-change:transform;image-rendering:pixelated;background:#0099db;}
+/* Água: desenhada aqui mesmo, porque o Sunflower Land não tem uma textura de mar pronta
+   (o mar do jogo deles é montado no próprio mapa). Mesmo azul do resto do jogo, com ondinhas
+   que cabem inteiras dentro do quadradinho — assim emenda sem costura aparente. */
+#prod-world{position:absolute;top:0;left:0;will-change:transform;image-rendering:pixelated;background-color:#0099db;background-size:64px 64px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%230099db'/%3E%3Cg fill='%230b8ccb'%3E%3Cellipse cx='14' cy='12' rx='9' ry='3.5'/%3E%3Cellipse cx='45' cy='27' rx='11' ry='4'/%3E%3Cellipse cx='22' cy='45' rx='10' ry='3.5'/%3E%3Cellipse cx='52' cy='57' rx='8' ry='3'/%3E%3C/g%3E%3Cg fill='%2333aee4'%3E%3Cellipse cx='34' cy='8' rx='6' ry='2'/%3E%3Cellipse cx='8' cy='30' rx='5' ry='2'/%3E%3Cellipse cx='40' cy='50' rx='6' ry='2'/%3E%3C/g%3E%3C/svg%3E");}
+/* Terreno bloqueado: escurece o bloco e põe o cadeado do SFL no meio. */
+#prod-locks{position:absolute;pointer-events:none;}
+.prod-lock{position:absolute;width:64px;height:64px;background:rgba(10,16,30,.48);box-shadow:inset 0 0 0 0.5px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;}
+.prod-lock img{width:14px;height:19px;image-rendering:pixelated;opacity:.9;filter:drop-shadow(0 1px 0 rgba(0,0,0,.5));}
+/* O barco que te trouxe, atracado ao lado do terreno liberado. */
+#prod-boat{position:absolute;width:48px;height:31px;object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));animation:prod-boat-bob 3.4s ease-in-out infinite;}
+@keyframes prod-boat-bob{0%,100%{transform:translateY(0) rotate(-1deg);}50%{transform:translateY(-2px) rotate(1deg);}}
 #prod-ground{position:absolute;background-color:#63a14a;background-image:url("https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/ui/3x3_bg.png");background-size:48px 48px;background-repeat:repeat;image-rendering:pixelated;box-shadow:0 0 0 3px #e0c08c,0 0 0 4px #c89a5e;}
 #prod-grid{position:absolute;display:none;pointer-events:none;background-size:64px 64px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M16 0V64M32 0V64M48 0V64M0 16H64M0 32H64M0 48H64' stroke='rgba(255,255,255,0.22)' stroke-width='0.35' fill='none'/%3E%3Cpath d='M0 0V64M0 0H64' stroke='rgba(255,255,255,0.6)' stroke-width='1.4' fill='none'/%3E%3C/svg%3E");box-shadow:inset -0.7px -0.7px 0 rgba(255,255,255,.6);}
 #prod-grid.show{display:block;}
@@ -14231,6 +14263,8 @@ function prodEnsureDom() {
       <div id="prod-world">
         <div id="prod-ground"></div>
         <div id="prod-grid"></div>
+        <div id="prod-locks"></div>
+        <img id="prod-boat" src="https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/decorations/restock_boat.png" alt="" onerror="this.style.display='none'">
         <div id="prod-char"><div id="prod-char-img"></div></div>
       </div>
       <div id="prod-title"></div>
@@ -14251,16 +14285,25 @@ function openProdIsland() {
   world.style.width = full + 'px';
   world.style.height = full + 'px';
   world.style.transformOrigin = '0 0';
-  for (const id of ['prod-ground', 'prod-grid']) {
+  for (const id of ['prod-ground', 'prod-grid', 'prod-locks']) {
     const el = document.getElementById(id);
     el.style.left = PROD_SEA + 'px'; el.style.top = PROD_SEA + 'px';
     el.style.width = W + 'px'; el.style.height = W + 'px';
   }
+  if (!PROD.unlocked) PROD.unlocked = PROD_UNLOCKED_START.slice();
+  prodDesenhaTerreno();
   document.getElementById('prod-title').textContent = t('prod.title');
   document.getElementById('prod-exit-btn').textContent = t('prod.exit');
-  // Começa no meio da ilha, parado, olhando pra direita.
-  PROD.x = PROD_SEA + W / 2;
-  PROD.y = PROD_SEA + W / 2;
+  // Nasce DENTRO do terreno liberado (o bloco de cima à esquerda), não no meio da ilha.
+  const lib = (PROD.unlocked[0] || '0,0').split(',').map(Number);
+  PROD.x = PROD_SEA + lib[0] * PROD_BLOCK + PROD_BLOCK / 2;
+  PROD.y = PROD_SEA + lib[1] * PROD_BLOCK + PROD_BLOCK / 2;
+  // O barco fica atracado no mar, encostado na beira desse bloco.
+  const boat = document.getElementById('prod-boat');
+  if (boat) {
+    boat.style.left = (PROD_SEA + lib[0] * PROD_BLOCK - 54) + 'px';
+    boat.style.top = (PROD_SEA + lib[1] * PROD_BLOCK + 18) + 'px';
+  }
   PROD.vx = 0; PROD.vy = 0; PROD.lastT = 0; PROD.animAcc = 0;
   for (const k in PROD.keys) PROD.keys[k] = false;
   prodSetBuilding(false);

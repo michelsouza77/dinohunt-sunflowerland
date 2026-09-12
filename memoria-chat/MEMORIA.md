@@ -669,6 +669,21 @@ anda na água.
 fica nítida com o mundo ampliado ~4,5×. **Só aparece no modo construção** (decisão do Michel):
 botão 🔨 ou tecla **G**; **Esc** sai do modo, e Esc de novo sai da ilha.
 
+**🔒 Terreno bloqueado (11/09, pedido do Michel).** A ilha continua 6×6 blocos, mas **só o
+bloco do canto de cima à esquerda nasce liberado**; os outros 35 ficam escurecidos com o
+cadeado do SFL (`src/assets/icons/lock.png`, 9×12px) no meio. Quem controla é
+`PROD.unlocked` (lista de `"x,y"`), e `prodDesenhaTerreno()` redesenha — é o gancho da
+expansão: comprou um bloco, acrescenta na lista e chama de novo.
+⚠️ **Isto contraria a decisão anterior** de começar com espaço pra 4 fábricas. O Michel mudou
+de ideia; a nota do JARVIS foi corrigida.
+
+**Água e barco.** O SFL **não tem textura de mar** pronta (o mar deles é montado no mapa), então
+a água é um SVG repetido de 64px feito aqui, no mesmo azul do jogo, com as ondas inteiras dentro
+do quadradinho pra emendar sem costura. O mar em volta passou de 96 pra **128px**, senão o
+jogador chega na beirada e vê o vazio. O barco (o mesmo `restock_boat.png` da ilha principal)
+fica atracado ao lado do bloco liberado, e **o jogador nasce dentro desse bloco**, não no meio
+da ilha.
+
 **Testado:** headless — tamanhos (mundo 576, ilha 384 em 96), grade liga/desliga, banner,
 fechar, sem modo dev não abre, inglês; laço rodado na mão — 50px/s, **para exatamente na água**
 (x=474, y=92), vira de lado. Navegador real (Playwright) — animação parado 0–8 / andando 9–16,
