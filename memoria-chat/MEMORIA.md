@@ -639,10 +639,19 @@ chamando `Mine-defender`; só o nome no GitHub mudou.
 ### 🏝️ Ilhas de produção — PASSO 1: ilha vazia com grade (11/09/2026) — EM OBRA
 Plano completo no JARVIS: `20 Projetos/Ilhas de produção.md`.
 
-**🔒 Só abre com o modo dev.** Abrir o jogo com **`?dev=ilhas`** (grava em
-`localStorage['dinohunt_dev_ilhas']`, então fica ligado naquele navegador); **`?dev=off`**
-desliga. Sem isso o barco continua dizendo "em breve". Motivo: **todo push vai direto pro ar
-no GitHub Pages** — feature em obra tem que ficar escondida do jogador.
+**🔒 Quem enxerga a ilha** (regra em `prodDevOn()`, mudada em 11/09 a pedido do Michel):
+
+| onde o jogo está rodando | o barco faz |
+|---|---|
+| **dentro do Sunflower Land** (tem `jwt` na URL) | mostra "em breve" |
+| **fora dele** — arquivo local, localhost, teste | **abre a ilha** |
+
+O Michel abre o jogo como arquivo (`file:///…/game2/index.html`) e **não quer digitar nada na
+URL**; por isso a regra é automática. `?dev=ilhas` força ligado e `?dev=off` força desligado em
+qualquer situação (fica gravado em `localStorage['dinohunt_dev_ilhas']`).
+
+⚠️ Ele **envia o HTML no painel do SFL**, e lá o jogo roda com `jwt` — então o que ele sobe já
+esconde a ilha sozinho, sem ele precisar lembrar de nada.
 
 **Bloco autocontido**, logo depois de `barcoClick()`: cria o próprio CSS (`PROD_CSS` num
 `<style id="prod-style">`), a própria tela (`prodEnsureDom`, inserida ao lado do
