@@ -684,6 +684,31 @@ jogador chega na beirada e vê o vazio. O barco (o mesmo `restock_boat.png` da i
 fica atracado ao lado do bloco liberado, e **o jogador nasce dentro desse bloco**, não no meio
 da ilha.
 
+**🌊 Água OFICIAL, sem areia, e os botões (11/09, 2ª rodada).**
+- A água agora é **`public/offline/ocean.webp` do SFL** — 64×64, feita pra repetir, só 400
+  bytes, **embutida em base64** no arquivo (não depende de internet nem de CDN). Ela **não
+  está no repositório público** deles: achei na cópia do código do SFL que mora em
+  `game2/sunflower-land-2.21.42-…/`. **Procure lá antes de desenhar textura na mão.**
+- ❌ A água da arte da ilha principal **não serve**: medi o padrão (diferença ao deslocar 8,
+  12, 16, 24, 32, 48 e 64px) e **não se repete** — é desenhada à mão.
+- ❌ **Não existe sprite de borda de terreno acessível.** As bordas do SFL vêm da folha
+  `tilesheet.png` (1024×1024, pedaços de 16px), que o `tileset.json` cita mas que **não é
+  publicada** — nem no GitHub deles, nem na cópia local. O que tem nome de "borda" é moldura
+  de janela. A areia em volta da ilha foi **removida** a pedido do Michel.
+- O botão "Voltar" saiu: **clicar no barco sai da ilha**. Entrou o botão **🎒 mochila** (canto
+  de cima à direita), que lista os itens da conta — é com eles que a construção vai gastar.
+
+🔴 **CRASE DENTRO DE TEMPLATE LITERAL DERRUBA O JOGO INTEIRO.** Escrevi um comentário com
+``` `public/offline/ocean.webp` ``` dentro do `PROD_CSS`, que é um template literal — a crase
+**fechou a string**, virou `SyntaxError`, e **todo o script morreu** (`showToast` ficou
+`undefined`, o barco parou de responder, nada funcionava). Sintoma clássico: **quebra coisa
+que não tem nada a ver**. Pra achar: um ouvinte de erro no `<head>` mostra a linha exata.
+
+🔴 **Ao renomear um id no CSS, troque em TODAS as regras.** Mudei `#prod-exit-btn` pra
+`#prod-bag-btn` só na regra de posição e esqueci a regra compartilhada com o botão Construir —
+o botão nasceu sem `position:absolute` e ficou invisível. O teste dizia "existe"; **só a foto
+mostrou que não aparecia**.
+
 **Testado:** headless — tamanhos (mundo 576, ilha 384 em 96), grade liga/desliga, banner,
 fechar, sem modo dev não abre, inglês; laço rodado na mão — 50px/s, **para exatamente na água**
 (x=474, y=92), vira de lado. Navegador real (Playwright) — animação parado 0–8 / andando 9–16,

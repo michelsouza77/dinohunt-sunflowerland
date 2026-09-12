@@ -14203,7 +14203,7 @@ function prodDevOn() {
 })();
 Object.assign(I18N.pt, {
   'prod.title': '🌱 Ilha de Produção',
-  'prod.exit': '⬅ Voltar',
+  'prod.bag_empty': 'Sua mochila está vazia',
   'prod.build': '🔨 Construir',
   'prod.build_done': '✅ Pronto',
   'prod.build_banner': '🔨 Modo construção · ilha de {w}×{h} blocos',
@@ -14211,7 +14211,7 @@ Object.assign(I18N.pt, {
 });
 Object.assign(I18N.en, {
   'prod.title': '🌱 Production Island',
-  'prod.exit': '⬅ Back',
+  'prod.bag_empty': 'Your backpack is empty',
   'prod.build': '🔨 Build',
   'prod.build_done': '✅ Done',
   'prod.build_banner': '🔨 Build mode · {w}×{h}-block island',
@@ -14224,10 +14224,14 @@ const PROD_CSS = `
 #prod-overlay{display:none;position:fixed;inset:0;z-index:4000;background:#0a0805;overflow:hidden;touch-action:none;}
 #prod-overlay.open{display:block;}
 #prod-viewport{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:1000px;height:620px;overflow:hidden;background:#0099db;border-radius:10px;box-shadow:0 0 0 3px rgba(0,0,0,.55),0 0 0 5px rgba(255,255,255,.07),0 14px 46px rgba(0,0,0,.6);}
-/* Água: desenhada aqui mesmo, porque o Sunflower Land não tem uma textura de mar pronta
-   (o mar do jogo deles é montado no próprio mapa). Mesmo azul do resto do jogo, com ondinhas
-   que cabem inteiras dentro do quadradinho — assim emenda sem costura aparente. */
-#prod-world{position:absolute;top:0;left:0;will-change:transform;image-rendering:pixelated;background-color:#0099db;background-size:64px 64px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%230099db'/%3E%3Cg fill='%230b8ccb'%3E%3Cellipse cx='14' cy='12' rx='9' ry='3.5'/%3E%3Cellipse cx='45' cy='27' rx='11' ry='4'/%3E%3Cellipse cx='22' cy='45' rx='10' ry='3.5'/%3E%3Cellipse cx='52' cy='57' rx='8' ry='3'/%3E%3C/g%3E%3Cg fill='%2333aee4'%3E%3Cellipse cx='34' cy='8' rx='6' ry='2'/%3E%3Cellipse cx='8' cy='30' rx='5' ry='2'/%3E%3Cellipse cx='40' cy='50' rx='6' ry='2'/%3E%3C/g%3E%3C/svg%3E");}
+/* Água OFICIAL do Sunflower Land: public/offline/ocean.webp, 64×64 e feita pra repetir.
+   ⚠️ NÃO use crase neste bloco: ele é um template literal, e a crase o FECHA — foi assim que
+   um comentário meu virou erro de sintaxe e derrubou o jogo inteiro em 11/09.
+   Achada na cópia do código do SFL que mora em game2/sunflower-land-…/ — ela NÃO está no
+   repositório público deles, e o mar do mundo do jogo vem de uma folha de tiles que eles não
+   publicam. Embutida aqui (são 400 bytes) pra nunca depender de internet nem de CDN.
+   A água da arte da ilha principal não serve: é desenhada à mão e não se repete (medido). */
+#prod-world{position:absolute;top:0;left:0;will-change:transform;image-rendering:pixelated;background-color:#0099db;background-size:64px 64px;background-repeat:repeat;background-image:url("data:image/webp;base64,UklGRogBAABXRUJQVlA4THwBAAAvP8APAB+goG0U6F7wrwCJ2BESEJXq/zVfyAQsNvp3lMI9/3FuqC3+g+Q2kiRJskZu7Tf36JYnChgFztZsBYrRKAUIwB4ZNatCRP8nIN3nsocuu4DaxnfWBt18vaHOnKvhE0qpyC24VEod4Ox+pU5Sdfz7WfHKXlu8HnA2Nuypo5tAbHYD0kAdtVEzdaQO1IGiQQVt6iwdOZtjaaTOg2XMz1upaDxSjddUHRr3UmVtsxT3UVf5rVi6mtmYV9Gh9R8rVrc66GZeZUepcT4uBqlOHtBwUDr4seZSJw8oCSpQ4QawRFkGfUkF1+dRE3htlPPBfqaDpcGdpUEqqgNUZ2puwdocRiPVzBqrs4cuL8ZrNuvi5ckWV/N5W+rIb8BycDXgzv6d1+dWHcb5QEc2sfTlUSq5DXUeqgE6aUp1AOR2W5sDzi91QF08N4BS4fV56GQZlAPgKEk1uEwp1XHeKAM43OfzVqpX8Yn7eH5199XEZ3ZU93rl/2TnxVwXJw==");}
 /* Terreno bloqueado: escurece o bloco e põe o cadeado do SFL no meio. */
 #prod-locks{position:absolute;pointer-events:none;}
 .prod-lock{position:absolute;width:64px;height:64px;background:rgba(10,16,30,.48);box-shadow:inset 0 0 0 0.5px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;}
@@ -14235,7 +14239,7 @@ const PROD_CSS = `
 /* O barco que te trouxe, atracado ao lado do terreno liberado. */
 #prod-boat{position:absolute;width:48px;height:31px;object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));animation:prod-boat-bob 3.4s ease-in-out infinite;}
 @keyframes prod-boat-bob{0%,100%{transform:translateY(0) rotate(-1deg);}50%{transform:translateY(-2px) rotate(1deg);}}
-#prod-ground{position:absolute;background-color:#63a14a;background-image:url("https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/ui/3x3_bg.png");background-size:48px 48px;background-repeat:repeat;image-rendering:pixelated;box-shadow:0 0 0 3px #e0c08c,0 0 0 4px #c89a5e;}
+#prod-ground{position:absolute;background-color:#63a14a;background-image:url("https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/ui/3x3_bg.png");background-size:48px 48px;background-repeat:repeat;image-rendering:pixelated;}
 #prod-grid{position:absolute;display:none;pointer-events:none;background-size:64px 64px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M16 0V64M32 0V64M48 0V64M0 16H64M0 32H64M0 48H64' stroke='rgba(255,255,255,0.22)' stroke-width='0.35' fill='none'/%3E%3Cpath d='M0 0V64M0 0H64' stroke='rgba(255,255,255,0.6)' stroke-width='1.4' fill='none'/%3E%3C/svg%3E");box-shadow:inset -0.7px -0.7px 0 rgba(255,255,255,.6);}
 #prod-grid.show{display:block;}
 #prod-char{position:absolute;width:84px;height:56px;transform:translate(-50%,-50%);z-index:5;}
@@ -14243,9 +14247,16 @@ const PROD_CSS = `
 #prod-char-img.flip{transform:scaleX(-1);}
 #prod-title{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-family:'Pixelify Sans',monospace;font-size:18px;font-weight:700;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.6);pointer-events:none;z-index:10;white-space:nowrap;}
 #prod-build-banner{position:absolute;top:44px;left:50%;transform:translateX(-50%);font-family:'Pixelify Sans',monospace;font-size:13px;color:#ffe08a;background:rgba(0,0,0,.55);padding:4px 12px;border-radius:8px;pointer-events:none;z-index:10;white-space:nowrap;}
-#prod-build-btn,#prod-exit-btn{position:absolute;z-index:10;font-family:'Pixelify Sans',monospace;font-size:16px;font-weight:700;color:#fff;padding:10px 16px;cursor:pointer;image-rendering:pixelated;border-style:solid;border-width:5.25px;border-image:url("https://sunflower-land.com/game-assets/ui/panel/light_border.png") 20%;border-image-repeat:stretch;border-radius:13px;text-shadow:1px 1px 0 rgba(0,0,0,.4);}
+#prod-build-btn,#prod-bag-btn{position:absolute;z-index:10;font-family:'Pixelify Sans',monospace;font-size:16px;font-weight:700;color:#fff;padding:10px 16px;cursor:pointer;image-rendering:pixelated;border-style:solid;border-width:5.25px;border-image:url("https://sunflower-land.com/game-assets/ui/panel/light_border.png") 20%;border-image-repeat:stretch;border-radius:13px;text-shadow:1px 1px 0 rgba(0,0,0,.4);}
 #prod-build-btn{right:14px;bottom:14px;background-color:#63c74d;}
-#prod-exit-btn{right:14px;top:10px;background-color:#b96f50;}
+#prod-bag-btn{right:14px;top:10px;background-color:#b96f50;font-size:20px;padding:8px 12px;}
+/* Mochila: o que você tem na conta, pra saber com o que dá pra construir. */
+#prod-bag{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);z-index:11;max-width:86%;max-height:52%;overflow-y:auto;background-color:#e4a672;image-rendering:pixelated;border-style:solid;border-width:5.25px;border-image:url("https://sunflower-land.com/game-assets/ui/panel/light_border.png") 20%;border-image-repeat:stretch;border-radius:13px;padding:10px;}
+#prod-bag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:5px;min-width:270px;}
+#prod-bag .slot{position:relative;aspect-ratio:1;background-color:#b96f50;image-rendering:pixelated;border-style:solid;border-width:5.25px;border-image:url("https://sunflower-land.com/game-assets/ui/panel/dark_border.png") 20%;border-image-repeat:stretch;border-radius:11px;display:flex;align-items:center;justify-content:center;}
+#prod-bag .slot img{width:60%;height:60%;object-fit:contain;image-rendering:pixelated;}
+#prod-bag .slot span{position:absolute;right:4px;bottom:1px;font-family:'SFLSecondary','Pixelify Sans',monospace;font-size:13px;color:#fff;text-shadow:1px 1px 0 #2d2840;}
+#prod-bag .vazia{font-family:'Pixelify Sans',monospace;font-size:12px;color:#6b4a28;text-align:center;padding:8px 14px;}
 #prod-joystick{position:absolute;bottom:40px;left:40px;width:120px;height:120px;z-index:10;background:rgba(45,40,64,.35);border:3px solid rgba(255,255,255,.4);border-radius:50%;touch-action:none;}
 #prod-joystick-knob{position:absolute;top:50%;left:50%;width:54px;height:54px;transform:translate(-50%,-50%);background:rgba(255,255,255,.7);border:3px solid #2d2840;border-radius:50%;pointer-events:none;}
 @media (pointer:fine), (min-width:900px){#prod-joystick{display:none;}}
@@ -14264,13 +14275,13 @@ function prodEnsureDom() {
         <div id="prod-ground"></div>
         <div id="prod-grid"></div>
         <div id="prod-locks"></div>
-        <img id="prod-boat" src="https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/decorations/restock_boat.png" alt="" onerror="this.style.display='none'">
+        <img id="prod-boat" src="https://cdn.jsdelivr.net/gh/sunflower-land/sunflower-land@main/src/assets/decorations/restock_boat.png" alt="" onclick="closeProdIsland()" onerror="this.style.display='none'">
         <div id="prod-char"><div id="prod-char-img"></div></div>
       </div>
       <div id="prod-title"></div>
       <div id="prod-build-banner" style="display:none"></div>
       <button id="prod-build-btn" onclick="prodToggleBuild()"></button>
-      <button id="prod-exit-btn" onclick="closeProdIsland()"></button>
+      <button id="prod-bag-btn" onclick="prodToggleMochila()" title="Mochila">🎒</button>
       <div id="prod-joystick"><div id="prod-joystick-knob"></div></div>
     </div>`;
   // Mesmo pai da tela da caçada: assim herda o mesmo "palco" fixo 1280×720 no PC.
@@ -14293,7 +14304,7 @@ function openProdIsland() {
   if (!PROD.unlocked) PROD.unlocked = PROD_UNLOCKED_START.slice();
   prodDesenhaTerreno();
   document.getElementById('prod-title').textContent = t('prod.title');
-  document.getElementById('prod-exit-btn').textContent = t('prod.exit');
+  const bagAberta = document.getElementById('prod-bag'); if (bagAberta) bagAberta.remove();
   // Nasce DENTRO do terreno liberado (o bloco de cima à esquerda), não no meio da ilha.
   const lib = (PROD.unlocked[0] || '0,0').split(',').map(Number);
   PROD.x = PROD_SEA + lib[0] * PROD_BLOCK + PROD_BLOCK / 2;
@@ -14463,6 +14474,33 @@ function prodToggleBuild() {
   prodSetBuilding(!PROD.building);
   if (PROD.building && typeof showToast === 'function') showToast(t('prod.build_next'), 'info');
 }
+// 🎒 Mochila da ilha: mostra o que o jogador tem na conta, que é com o que ele vai construir.
+// Só leitura por enquanto — quem gasta é a construção, no passo seguinte.
+function prodToggleMochila() {
+  const aberta = document.getElementById('prod-bag');
+  if (aberta) { aberta.remove(); return; }
+  const bal = (typeof SFL_CONNECTED !== 'undefined' && SFL_CONNECTED)
+    ? (window._sflLastSession?.data?.playerEconomy?.balances || {})
+    : ((typeof offlineBalances === 'function') ? offlineBalances() : {});
+  let slots = '';
+  for (let id = 101; id <= 133; id++) {
+    const q = Math.floor(Number(bal[String(id)]) || 0);
+    if (q <= 0) continue;
+    const info = (typeof SFL_ITEMS_INFO !== 'undefined' && SFL_ITEMS_INFO[id]) || { emoji: '📦', name: 'Item ' + id };
+    const nome = (t('item.name.' + id, {}) !== ('item.name.' + id)) ? t('item.name.' + id) : info.name;
+    slots += `<div class="slot" title="${String(nome).replace(/"/g, '&quot;')}">`
+          + `<img src="${sflItemImageUrl(id)}" alt="" onerror="this.outerHTML='<span style=&quot;font-size:22px&quot;>${info.emoji}</span>'">`
+          + `<span>${q}</span></div>`;
+  }
+  const painel = document.createElement('div');
+  painel.id = 'prod-bag';
+  painel.innerHTML = slots
+    ? `<div id="prod-bag-grid">${slots}</div>`
+    : `<div class="vazia">${t('prod.bag_empty')}</div>`;
+  const vp = document.getElementById('prod-viewport');
+  if (vp) vp.appendChild(painel);
+}
+window.prodToggleMochila = prodToggleMochila;
 window.openProdIsland = openProdIsland;
 window.closeProdIsland = closeProdIsland;
 window.prodToggleBuild = prodToggleBuild;
